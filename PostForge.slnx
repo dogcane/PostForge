@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PostForge.Api/PostForge.Api.csproj" />
+    <Project Path="src/PostForge.Application/PostForge.Application.csproj" />
+    <Project Path="src/PostForge.Domain/PostForge.Domain.csproj" />
+    <Project Path="src/PostForge.Infrastructure/PostForge.Infrastructure.csproj" />
+    <Project Path="src/PostForge.Worker/PostForge.Worker.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PostForge.IntegrationTests/PostForge.IntegrationTests.csproj" />
+    <Project Path="tests/PostForge.UnitTests/PostForge.UnitTests.csproj" />
+  </Folder>
+</Solution>

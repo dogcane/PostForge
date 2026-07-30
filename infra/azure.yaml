@@ -1,0 +1,16 @@
+name: postforge
+services:
+  api:
+    language: dotnet
+    project: src/PostForge.Api/PostForge.Api.csproj
+    host: appservice
+  worker:
+    language: dotnet
+    project: src/PostForge.Worker/PostForge.Worker.csproj
+    host: appservice
+hooks:
+  postprovision:
+    shell: pwsh
+    run: echo "PostForge deployed successfully!"
+    interactive: false
+    continueOnError: false

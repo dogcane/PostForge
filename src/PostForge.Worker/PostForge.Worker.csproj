@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-PostForge.Worker-77c32c9d-808a-441d-9726-f9f767e0a12f</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Mediator.Abstractions" Version="3.0.*" />
+    <PackageReference Include="Mediator.SourceGenerator" Version="3.0.*">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.10" />
+    <PackageReference Include="Quartz" Version="3.19.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PostForge.Application\PostForge.Application.csproj" />
+    <ProjectReference Include="..\PostForge.Infrastructure\PostForge.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>
