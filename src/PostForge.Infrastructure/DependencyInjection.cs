@@ -17,15 +17,16 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("PostForgeDb")
-            ?? throw new InvalidOperationException("Connection string 'PostForgeDb' not found.");
-
-        var dbContextOptions = new DbContextOptionsBuilder<PostForgeDbContext>()
-            .UseSqlServer(connectionString)
-            .Options;
-
         services.AddSingleton<IPersistenceUnitFactory>(sp =>
         {
+            var config = sp.GetRequiredService<IConfiguration>();
+            var connectionString = config.GetConnectionString("PostForgeDb")
+                ?? throw new InvalidOperationException("Connection string 'PostForgeDb' not found.");
+
+            var dbContextOptions = new DbContextOptionsBuilder<PostForgeDbContext>()
+                .UseSqlServer(connectionString)
+                .Options;
+
             var factory = new PersistenceUnitFactory();
             var unit = new EntityFrameworkPersistenceUnit<PostForgeDbContext>(
                 "PostForgeUnit",
@@ -54,7 +55,7 @@ public static class DependencyInjection
         RegisterSocialProviders(services);
         RegisterAiProviders(services);
         RegisterHttpClients(services);
-        RegisterMessaging(services, configuration);
+        RegisterMessaging(services);
 
         return services;
     }
@@ -77,8 +78,8 @@ public static class DependencyInjection
         services.AddScoped<IAiImageProvider, DallEImageProvider>();
         services.AddScoped<IAiImageProvider, StableDiffusionImageProvider>();
 
-        services.AddSingleton<IProviderRegistry<IAiTextProvider>, AiTextProviderRegistry>();
-        services.AddSingleton<IProviderRegistry<IAiImageProvider>, AiImageProviderRegistry>();
+        services.AddScoped<IProviderRegistry<IAiTextProvider>, AiTextProviderRegistry>();
+        services.AddScoped<IProviderRegistry<IAiImageProvider>, AiImageProviderRegistry>();
     }
 
     private static void RegisterHttpClients(IServiceCollection services)
@@ -96,13 +97,14 @@ public static class DependencyInjection
             .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://www.googleapis.com/youtube/v3/"));
     }
 
-    private static void RegisterMessaging(IServiceCollection services, IConfiguration configuration)
+    private static void RegisterMessaging(IServiceCollection services)
     {
-        var serviceBusConnectionString = configuration.GetConnectionString("ServiceBus")
-            ?? throw new InvalidOperationException("Connection string 'ServiceBus' not found.");
-
         services.AddSingleton(sp =>
         {
+            var config = sp.GetRequiredService<IConfiguration>();
+            var serviceBusConnectionString = config.GetConnectionString("ServiceBus")
+                ?? throw new InvalidOperationException("Connection string 'ServiceBus' not found.");
+
             var client = new ServiceBusClient(serviceBusConnectionString);
             return client.CreateSender("publish-jobs");
         });

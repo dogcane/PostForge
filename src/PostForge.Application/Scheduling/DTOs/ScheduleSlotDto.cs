@@ -1,8 +1,10 @@
+using PostForge.Application.Common.Mappings;
+using PostForge.Domain.Entities;
 using PostForge.Domain.ValueObjects;
 
 namespace PostForge.Application.Scheduling.DTOs;
 
-public class ScheduleSlotDto
+public class ScheduleSlotDto : IMapFrom<ScheduleSlot>
 {
     public Guid Id { get; set; }
     public Guid PostId { get; set; }

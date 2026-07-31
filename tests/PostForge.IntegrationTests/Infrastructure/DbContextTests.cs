@@ -100,8 +100,7 @@ public class DbContextTests
         await context.SaveChangesAsync();
 
         var retrieved = await context.Posts
-            .Include(p => p.MediaAssets)
-            .FirstAsync(p => p.Id == post.Id);
+            .FirstAsync(p => p.Identity == post.Id);
         retrieved.MediaAssets.Should().ContainSingle();
         retrieved.MediaAssets[0].BlobUri.Should().Be("https://example.com/image.jpg");
     }
