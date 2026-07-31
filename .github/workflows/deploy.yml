@@ -1,9 +1,8 @@
 name: Deploy
 
+# Disabilitato temporaneamente: nessun ambiente Azure attivo.
+# Da riattivare delegando il deploy ai tag (es. on: push: tags: ['v*']).
 on:
-  push:
-    branches: [main]
-  workflow_dispatch:
 
 jobs:
   deploy-infra:

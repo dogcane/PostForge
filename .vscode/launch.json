@@ -1,0 +1,41 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "API (PostForge.Api)",
+      "type": "dotnet",
+      "request": "launch",
+      "projectPath": "${workspaceFolder}/src/PostForge.Api/PostForge.Api.csproj"
+    },
+    {
+      "name": "Worker (PostForge.Worker)",
+      "type": "dotnet",
+      "request": "launch",
+      "projectPath": "${workspaceFolder}/src/PostForge.Worker/PostForge.Worker.csproj"
+    },
+    {
+      "name": "ng serve (web)",
+      "type": "chrome",
+      "request": "launch",
+      "preLaunchTask": "npm: start (web)",
+      "url": "http://localhost:4200/"
+    },
+    {
+      "name": "ng test (web)",
+      "type": "chrome",
+      "request": "launch",
+      "preLaunchTask": "npm: test (web)",
+      "url": "http://localhost:9876/debug.html"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Full Stack (API + Worker + Web)",
+      "configurations": [
+        "API (PostForge.Api)",
+        "Worker (PostForge.Worker)",
+        "ng serve (web)"
+      ]
+    }
+  ]
+}
