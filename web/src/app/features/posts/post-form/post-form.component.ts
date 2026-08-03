@@ -8,7 +8,6 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatChipsModule } from '@angular/material/chips';
 
 @Component({
   selector: 'app-post-form',
@@ -21,85 +20,85 @@ import { MatChipsModule } from '@angular/material/chips';
     MatInputModule,
     MatSelectModule,
     MatButtonModule,
-    MatIconModule,
-    MatChipsModule
+    MatIconModule
   ],
   template: `
-    <div class="form-container">
-      <h1>{{ isEditing ? 'Edit Post' : 'New Post' }}</h1>
+    <div class="pf-page pf-form">
+      <div class="pf-page-header">
+        <div>
+          <h1 class="pf-title">{{ isEditing ? 'Edit Post' : 'New Post' }}</h1>
+          <p class="pf-subtitle">Write once, publish everywhere.</p>
+        </div>
+      </div>
 
-      <mat-card>
-        <mat-card-content>
-          <div class="form-fields">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Post Content</mat-label>
-              <textarea matInput [(ngModel)]="postText" rows="6" placeholder="Write your post content here..."></textarea>
-              <mat-hint align="end">{{ postText.length }} / 500</mat-hint>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Target Platforms</mat-label>
-              <mat-select [(ngModel)]="selectedPlatforms" multiple>
-                <mat-option value="facebook">Facebook</mat-option>
-                <mat-option value="instagram">Instagram</mat-option>
-                <mat-option value="tiktok">TikTok</mat-option>
-                <mat-option value="youtube">YouTube</mat-option>
-              </mat-select>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Campaign (optional)</mat-label>
-              <mat-select [(ngModel)]="selectedCampaign">
-                <mat-option [value]="null">None</mat-option>
-                <mat-option *ngFor="let campaign of campaigns" [value]="campaign.id">{{ campaign.name }}</mat-option>
-              </mat-select>
-            </mat-form-field>
+      <mat-card class="pf-card pf-form__card">
+        <div class="pf-form__title">
+          <div class="pf-feature-icon">
+            <mat-icon>article</mat-icon>
           </div>
-        </mat-card-content>
-        <mat-card-actions align="end">
-          <button mat-button (click)="cancel()">Cancel</button>
-          <button mat-raised-button color="primary" (click)="save()">
-            <mat-icon>save</mat-icon>
-            {{ isEditing ? 'Update' : 'Save Draft' }}
-          </button>
-          <button mat-raised-button color="accent" (click)="saveAndSchedule()">
-            <mat-icon>schedule</mat-icon>
-            Save & Schedule
-          </button>
-        </mat-card-actions>
+          <div>
+            <h2>{{ isEditing ? 'Post details' : 'What do you want to say?' }}</h2>
+            <p>Content, target platforms and optional campaign.</p>
+          </div>
+        </div>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Post content</mat-label>
+          <textarea matInput [(ngModel)]="postText" rows="6" placeholder="Write your post content here..."></textarea>
+          <mat-hint align="end">{{ postText.length }} / 500</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Target platforms</mat-label>
+          <mat-select [(ngModel)]="selectedPlatforms" multiple>
+            <mat-option value="facebook">Facebook</mat-option>
+            <mat-option value="instagram">Instagram</mat-option>
+            <mat-option value="tiktok">TikTok</mat-option>
+            <mat-option value="youtube">YouTube</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Campaign (optional)</mat-label>
+          <mat-select [(ngModel)]="selectedCampaign">
+            <mat-option [value]="null">None</mat-option>
+            <mat-option *ngFor="let campaign of campaigns" [value]="campaign.id">{{ campaign.name }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </mat-card>
+
+      <mat-card class="pf-card pf-form-actions">
+        <button mat-button (click)="cancel()">Cancel</button>
+        <button mat-flat-button class="pf-btn-primary" (click)="save()">
+          <mat-icon>save</mat-icon>
+          {{ isEditing ? 'Update' : 'Save Draft' }}
+        </button>
+        <button mat-flat-button class="pf-btn-primary" (click)="saveAndSchedule()">
+          <mat-icon>schedule</mat-icon>
+          Save & Schedule
+        </button>
       </mat-card>
     </div>
-  `,
-  styles: [`
-    .form-container {
-      max-width: 800px;
-      margin: 0 auto;
-    }
-    .form-container h1 {
-      font-weight: 500;
-      margin-bottom: 20px;
-    }
-    .full-width {
-      width: 100%;
-      margin-bottom: 16px;
-    }
-    .form-fields {
-      padding: 16px 0;
-    }
-  `]
+  `
 })
 export class PostFormComponent {
   isEditing = false;
   postText = '';
-  selectedPlatforms: string[] = [];
+  selectedPlatforms: string[] = ['facebook'];
   selectedCampaign: string | null = null;
-  campaigns: { id: string; name: string }[] = [];
+  campaigns: { id: string; name: string }[] = [
+    { id: '1', name: 'Summer Launch' },
+    { id: '2', name: 'Brand Awareness Q3' }
+  ];
 
   constructor(
     private route: ActivatedRoute,
     private router: Router
   ) {
     this.isEditing = !!this.route.snapshot.paramMap.get('id');
+    if (this.isEditing) {
+      this.postText = 'Sample draft content being edited...';
+    }
   }
 
   cancel(): void {

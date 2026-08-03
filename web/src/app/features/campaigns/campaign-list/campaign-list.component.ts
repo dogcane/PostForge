@@ -1,108 +1,119 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { MatTableModule } from '@angular/material/table';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatChipsModule } from '@angular/material/chips';
 import { Campaign, CampaignGoal, CampaignChannel } from '../../../models/campaign.model';
 
 @Component({
   selector: 'app-campaign-list',
   standalone: true,
-  imports: [
-    CommonModule,
-    RouterLink,
-    MatTableModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatChipsModule
-  ],
+  imports: [CommonModule, RouterLink, MatCardModule, MatButtonModule, MatIconModule],
   template: `
-    <div class="campaign-list-header">
-      <h1>Campaigns</h1>
-      <button mat-raised-button color="primary" routerLink="/campaigns/new">
-        <mat-icon>add</mat-icon>
-        New Campaign
-      </button>
-    </div>
+    <div class="pf-page">
+      <div class="pf-page-header">
+        <div>
+          <h1 class="pf-title">Campaigns</h1>
+          <p class="pf-subtitle">Group your content around a goal and keep it on track</p>
+        </div>
+        <a mat-flat-button class="pf-btn-primary" routerLink="/campaigns/new">
+          <mat-icon>add</mat-icon>
+          New Campaign
+        </a>
+      </div>
 
-    <mat-card>
-      <mat-card-content>
-        <table mat-table [dataSource]="campaigns" class="campaign-table">
-          <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef>Name</th>
-            <td mat-cell *matCellDef="let campaign">{{ campaign.name }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="goal">
-            <th mat-header-cell *matHeaderCellDef>Goal</th>
-            <td mat-cell *matCellDef="let campaign">
-              <mat-chip [color]="getGoalColor(campaign.goal)" selected>{{ campaign.goal }}</mat-chip>
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="channel">
-            <th mat-header-cell *matHeaderCellDef>Channel</th>
-            <td mat-cell *matCellDef="let campaign">{{ campaign.channel }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="dateRange">
-            <th mat-header-cell *matHeaderCellDef>Date Range</th>
-            <td mat-cell *matCellDef="let campaign">
-              {{ campaign.startDate | date:'shortDate' }} - {{ campaign.endDate | date:'shortDate' }}
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="posts">
-            <th mat-header-cell *matHeaderCellDef>Posts</th>
-            <td mat-cell *matCellDef="let campaign">{{ campaign.postIds.length }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Actions</th>
-            <td mat-cell *matCellDef="let campaign">
-              <button mat-icon-button [routerLink]="['/campaigns', campaign.id]">
+      <ng-container *ngIf="campaigns.length; else empty">
+        <div class="pf-grid pf-grid--campaigns">
+          <article class="pf-card pf-card--hover campaign-card" *ngFor="let c of campaigns">
+            <div class="campaign-card__head">
+              <span class="pf-goal" [class]="goalClass(c.goal)">{{ goalLabel(c.goal) }}</span>
+              <span class="pf-channel" [class]="'pf-channel--' + c.channel.toLowerCase()">{{ c.channel }}</span>
+            </div>
+            <h3 class="campaign-card__name">{{ c.name }}</h3>
+            <p class="campaign-card__desc">{{ c.description }}</p>
+            <div class="campaign-card__meta">
+              <span>
+                <mat-icon>date_range</mat-icon>
+                {{ c.startDate | date: 'MMM d' }} – {{ c.endDate | date: 'MMM d, yyyy' }}
+              </span>
+              <span class="spacer"></span>
+              <span>
+                <mat-icon>article</mat-icon>
+                {{ c.postIds.length }} posts
+              </span>
+              <button mat-icon-button [routerLink]="['/campaigns', c.id]" aria-label="Edit campaign">
                 <mat-icon>edit</mat-icon>
               </button>
-            </td>
-          </ng-container>
+            </div>
+          </article>
+        </div>
+      </ng-container>
 
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-        </table>
-      </mat-card-content>
-    </mat-card>
-  `,
-  styles: [`
-    .campaign-list-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-    .campaign-list-header h1 {
-      margin: 0;
-      font-weight: 500;
-    }
-    .campaign-table {
-      width: 100%;
-    }
-  `]
+      <ng-template #empty>
+        <div class="pf-empty">
+          <mat-icon>campaign</mat-icon>
+          <h3>No campaigns yet</h3>
+          <p>Bundle posts under a goal and a channel to keep your publishing strategy focused.</p>
+          <a mat-flat-button class="pf-btn-primary" routerLink="/campaigns/new">
+            <mat-icon>add</mat-icon>
+            Create a campaign
+          </a>
+        </div>
+      </ng-template>
+    </div>
+  `
 })
 export class CampaignListComponent {
-  displayedColumns: string[] = ['name', 'goal', 'channel', 'dateRange', 'posts', 'actions'];
+  campaigns: Campaign[] = [
+    {
+      id: '1',
+      name: 'Summer Launch',
+      description: 'Cross-platform product reveal for the summer collection, with teasers and a reveal day.',
+      goal: CampaignGoal.Awareness,
+      channel: CampaignChannel.Organic,
+      startDate: new Date(Date.now() - 86400000 * 6).toISOString(),
+      endDate: new Date(Date.now() + 86400000 * 24).toISOString(),
+      postIds: ['1', '2'],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: '2',
+      name: 'Lead Gen Sprint',
+      description: 'Paid push on Facebook and Instagram driving sign-ups for the early access waitlist.',
+      goal: CampaignGoal.LeadGeneration,
+      channel: CampaignChannel.Paid,
+      startDate: new Date(Date.now() + 86400000 * 3).toISOString(),
+      endDate: new Date(Date.now() + 86400000 * 17).toISOString(),
+      postIds: ['3'],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: '3',
+      name: 'Brand Trust Series',
+      description: 'A story-driven series about how we build PostForge, one weekly episode at a time.',
+      goal: CampaignGoal.Reputation,
+      channel: CampaignChannel.Organic,
+      startDate: new Date(Date.now() - 86400000 * 14).toISOString(),
+      endDate: new Date(Date.now() + 86400000 * 35).toISOString(),
+      postIds: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+  ];
 
-  campaigns: Campaign[] = [];
+  goalClass(goal: CampaignGoal): string {
+    return 'pf-goal--' + goal.toLowerCase();
+  }
 
-  getGoalColor(goal: CampaignGoal): string {
+  goalLabel(goal: CampaignGoal): string {
     switch (goal) {
-      case CampaignGoal.Awareness: return 'primary';
-      case CampaignGoal.Reputation: return 'accent';
-      case CampaignGoal.LeadGeneration: return 'warn';
-      default: return '';
+      case CampaignGoal.Awareness: return 'Awareness';
+      case CampaignGoal.Reputation: return 'Reputation';
+      case CampaignGoal.LeadGeneration: return 'Lead Gen';
+      default: return goal;
     }
   }
 }

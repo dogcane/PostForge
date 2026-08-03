@@ -1,182 +1,90 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
-import { MatChipsModule } from '@angular/material/chips';
 import { ScheduleSlot, ScheduleSlotStatus } from '../../../models/schedule-slot.model';
 
 @Component({
   selector: 'app-scheduling-calendar',
   standalone: true,
-  imports: [
-    CommonModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatChipsModule
-  ],
+  imports: [CommonModule, MatCardModule, MatIconModule],
   template: `
-    <div class="calendar-header">
-      <h1>Editorial Calendar</h1>
-      <div class="calendar-nav">
-        <button mat-mini-fab (click)="previousMonth()">
-          <mat-icon>chevron_left</mat-icon>
-        </button>
-        <span class="current-month">{{ currentMonthName }} {{ currentYear }}</span>
-        <button mat-mini-fab (click)="nextMonth()">
-          <mat-icon>chevron_right</mat-icon>
-        </button>
+    <div class="pf-page">
+      <div class="pf-page-header">
+        <div>
+          <h1 class="pf-title">Editorial Calendar</h1>
+          <p class="pf-subtitle">Your publishing plan, at a glance</p>
+        </div>
+
+        <div class="pf-calendar__nav">
+          <button (click)="previousMonth()" aria-label="Previous month">
+            <mat-icon>chevron_left</mat-icon>
+          </button>
+          <span class="pf-calendar__month">{{ currentMonthName }} {{ currentYear }}</span>
+          <button (click)="nextMonth()" aria-label="Next month">
+            <mat-icon>chevron_right</mat-icon>
+          </button>
+        </div>
       </div>
-    </div>
 
-    <div class="calendar-grid">
-      <div class="day-header" *ngFor="let day of dayNames">{{ day }}</div>
+      <div class="pf-calendar__grid">
+        <div class="pf-calendar__dow" *ngFor="let day of dayNames">{{ day }}</div>
 
-      <div class="calendar-day" *ngFor="let day of calendarDays" [class.other-month]="day.otherMonth" [class.today]="day.isToday">
-        <div class="day-number">{{ day.number }}</div>
-        <div class="day-slots">
-          <div class="slot-chip" *ngFor="let slot of day.slots" [class.published]="slot.status === ScheduleSlotStatus.Published" [class.failed]="slot.status === ScheduleSlotStatus.Failed">
-            {{ slot.platform | slice:0:4 }}
+        <div
+          class="pf-calendar__day"
+          *ngFor="let day of calendarDays"
+          [class.pf-calendar__day--other]="day.otherMonth"
+          [class.pf-calendar__day--today]="day.isToday"
+        >
+          <span class="pf-calendar__num">{{ day.number }}</span>
+          <div class="pf-calendar__slots">
+            <span class="pf-badge pf-badge--sm" *ngFor="let slot of day.slots" [class]="'pf-badge--' + slot.platform.toLowerCase()">
+              <mat-icon>{{ platformIcon(slot.platform) }}</mat-icon>
+              {{ slot.platform | slice: 0:4 }}
+            </span>
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="upcoming-section">
-      <h2>Upcoming Scheduled Posts</h2>
-      <mat-card *ngFor="let slot of upcomingSlots" class="slot-card">
-        <mat-card-content>
-          <div class="slot-info">
-            <span class="slot-platform">{{ slot.platform }}</span>
-            <span class="slot-time">{{ slot.scheduledAtUtc | date:'MMM d, yyyy h:mm a' }}</span>
-            <mat-chip [color]="getStatusColor(slot.status)" selected>{{ slot.status }}</mat-chip>
-          </div>
-        </mat-card-content>
-      </mat-card>
-      <div class="empty-state" *ngIf="upcomingSlots.length === 0">
-        <p>No scheduled posts yet. Create a post and schedule it to appear here.</p>
+      <h2 class="pf-section-title">Upcoming scheduled posts</h2>
+      <div class="pf-upcoming">
+        <mat-card class="pf-card pf-slot-row" *ngFor="let slot of upcomingSlots">
+          <span class="pf-status" [class]="'pf-status--' + slot.status.toLowerCase()">{{ slot.status }}</span>
+          <span class="pf-badge" [class]="'pf-badge--' + slot.platform.toLowerCase()">
+            <mat-icon>{{ platformIcon(slot.platform) }}</mat-icon>
+            {{ platformLabel(slot.platform) }}
+          </span>
+          <span class="pf-slot-row__time">
+            <mat-icon>schedule</mat-icon>
+            {{ slot.scheduledAtUtc | date: 'MMM d, yyyy · h:mm a' }}
+          </span>
+        </mat-card>
+
+        <div class="pf-empty" *ngIf="upcomingSlots.length === 0">
+          <mat-icon>event_note</mat-icon>
+          <h3>Nothing scheduled</h3>
+          <p>Create a post and schedule it to appear here.</p>
+        </div>
       </div>
     </div>
-  `,
-  styles: [`
-    .calendar-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-    .calendar-header h1 {
-      margin: 0;
-      font-weight: 500;
-    }
-    .calendar-nav {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .current-month {
-      font-size: 18px;
-      font-weight: 500;
-      min-width: 200px;
-      text-align: center;
-    }
-    .calendar-grid {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 4px;
-      margin-bottom: 24px;
-    }
-    .day-header {
-      text-align: center;
-      font-weight: 500;
-      padding: 8px;
-      color: rgba(0, 0, 0, 0.54);
-      font-size: 12px;
-      text-transform: uppercase;
-    }
-    .calendar-day {
-      min-height: 100px;
-      background: white;
-      border-radius: 4px;
-      padding: 8px;
-      border: 1px solid #e0e0e0;
-    }
-    .calendar-day.other-month {
-      opacity: 0.35;
-    }
-    .calendar-day.today {
-      border-color: #3f51b5;
-      background: rgba(63, 81, 181, 0.04);
-    }
-    .day-number {
-      font-size: 14px;
-      font-weight: 500;
-      margin-bottom: 4px;
-    }
-    .calendar-day.today .day-number {
-      color: #3f51b5;
-    }
-    .day-slots {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 2px;
-    }
-    .slot-chip {
-      background: #e8eaf6;
-      border-radius: 8px;
-      padding: 2px 6px;
-      font-size: 10px;
-      color: #283593;
-      cursor: pointer;
-    }
-    .slot-chip.published {
-      background: #c8e6c9;
-      color: #1b5e20;
-    }
-    .slot-chip.failed {
-      background: #ffcdd2;
-      color: #b71c1c;
-    }
-    .upcoming-section h2 {
-      font-weight: 500;
-      margin-bottom: 16px;
-    }
-    .slot-card {
-      margin-bottom: 8px;
-    }
-    .slot-info {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-    .slot-platform {
-      font-weight: 500;
-      min-width: 100px;
-    }
-    .slot-time {
-      color: rgba(0, 0, 0, 0.6);
-      flex: 1;
-    }
-    .empty-state {
-      text-align: center;
-      padding: 32px;
-      color: rgba(0, 0, 0, 0.4);
-    }
-  `]
+  `
 })
 export class SchedulingCalendarComponent {
-  protected readonly ScheduleSlotStatus = ScheduleSlotStatus;
-
   currentMonth: Date = new Date();
   dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   calendarDays: { number: number; otherMonth: boolean; isToday: boolean; slots: ScheduleSlot[] }[] = [];
-  upcomingSlots: ScheduleSlot[] = [];
+  upcomingSlots: ScheduleSlot[] = [
+    this.makeSlot('1', 'facebook', 0, 10, 0, ScheduleSlotStatus.Scheduled),
+    this.makeSlot('2', 'instagram', 0, 15, 30, ScheduleSlotStatus.Publishing),
+    this.makeSlot('3', 'youtube', 1, 9, 0, ScheduleSlotStatus.Scheduled),
+    this.makeSlot('4', 'tiktok', 3, 18, 0, ScheduleSlotStatus.Ready),
+    this.makeSlot('5', 'facebook', -1, 18, 0, ScheduleSlotStatus.Published)
+  ];
+
+  constructor() {
+    this.buildCalendar();
+  }
 
   get currentMonthName(): string {
     return this.currentMonth.toLocaleString('default', { month: 'long' });
@@ -186,8 +94,25 @@ export class SchedulingCalendarComponent {
     return this.currentMonth.getFullYear();
   }
 
-  constructor() {
-    this.buildCalendar();
+  private makeSlot(
+    id: string,
+    platform: string,
+    dayOffset: number,
+    hours: number,
+    minutes: number,
+    status: ScheduleSlotStatus
+  ): ScheduleSlot {
+    const d = new Date();
+    d.setDate(d.getDate() + dayOffset);
+    d.setHours(hours, minutes, 0, 0);
+    return {
+      id,
+      postId: id,
+      platform,
+      scheduledAtUtc: d.toISOString(),
+      status,
+      retryCount: 0
+    };
   }
 
   previousMonth(): void {
@@ -198,6 +123,26 @@ export class SchedulingCalendarComponent {
   nextMonth(): void {
     this.currentMonth = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth() + 1, 1);
     this.buildCalendar();
+  }
+
+  platformIcon(platform: string): string {
+    switch (platform.toLowerCase()) {
+      case 'facebook': return 'thumb_up';
+      case 'instagram': return 'photo_camera';
+      case 'tiktok': return 'music_note';
+      case 'youtube': return 'play_circle';
+      default: return 'language';
+    }
+  }
+
+  platformLabel(platform: string): string {
+    switch (platform.toLowerCase()) {
+      case 'facebook': return 'Facebook';
+      case 'instagram': return 'Instagram';
+      case 'tiktok': return 'TikTok';
+      case 'youtube': return 'YouTube';
+      default: return platform;
+    }
   }
 
   private buildCalendar(): void {
@@ -239,14 +184,23 @@ export class SchedulingCalendarComponent {
         slots: []
       });
     }
+
+    this.assignSlots();
   }
 
-  getStatusColor(status: ScheduleSlotStatus): string {
-    switch (status) {
-      case ScheduleSlotStatus.Published: return 'accent';
-      case ScheduleSlotStatus.Failed: return 'warn';
-      case ScheduleSlotStatus.Publishing: return 'primary';
-      default: return '';
+  private assignSlots(): void {
+    for (const slot of this.upcomingSlots) {
+      const d = new Date(slot.scheduledAtUtc);
+      const day = this.calendarDays.find(
+        (x) =>
+          !x.otherMonth &&
+          x.number === d.getDate() &&
+          d.getMonth() === this.currentMonth.getMonth() &&
+          d.getFullYear() === this.currentMonth.getFullYear()
+      );
+      if (day) {
+        day.slots.push(slot);
+      }
     }
   }
 }

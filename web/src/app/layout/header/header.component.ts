@@ -1,37 +1,42 @@
 import { Component, EventEmitter, Output } from '@angular/core';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { ThemeService } from '../../services/theme.service';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [MatToolbarModule, MatButtonModule, MatIconModule],
+  imports: [MatIconModule],
   template: `
-    <mat-toolbar color="primary">
-      <button mat-icon-button (click)="toggleMenu.emit()">
+    <header class="pf-header">
+      <button class="pf-icon-btn" (click)="toggleMenu.emit()" aria-label="Toggle navigation">
         <mat-icon>menu</mat-icon>
       </button>
-      <span class="app-title">PostForge</span>
-      <span class="spacer"></span>
-      <button mat-icon-button>
-        <mat-icon>notifications</mat-icon>
-      </button>
-      <button mat-icon-button>
-        <mat-icon>account_circle</mat-icon>
-      </button>
-    </mat-toolbar>
-  `,
-  styles: [`
-    .spacer {
-      flex: 1 1 auto;
-    }
-    .app-title {
-      font-weight: 500;
-      letter-spacing: 1px;
-    }
-  `]
+
+      <div class="pf-search">
+        <mat-icon>search</mat-icon>
+        <input type="text" placeholder="Search posts, campaigns..." />
+        <kbd>Ctrl K</kbd>
+      </div>
+
+      <div class="pf-header__actions">
+        <button class="pf-icon-btn" (click)="toggleTheme()" [attr.aria-label]="theme.isDark ? 'Switch to light theme' : 'Switch to dark theme'">
+          <mat-icon>{{ theme.isDark ? 'light_mode' : 'dark_mode' }}</mat-icon>
+        </button>
+        <button class="pf-icon-btn pf-notif" aria-label="Notifications">
+          <mat-icon>notifications</mat-icon>
+          <span class="pf-notif__dot"></span>
+        </button>
+        <div class="pf-avatar">A</div>
+      </div>
+    </header>
+  `
 })
 export class HeaderComponent {
   @Output() toggleMenu = new EventEmitter<void>();
+
+  constructor(readonly theme: ThemeService) {}
+
+  toggleTheme(): void {
+    this.theme.toggle();
+  }
 }

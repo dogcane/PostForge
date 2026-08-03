@@ -1,108 +1,114 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { MatTableModule } from '@angular/material/table';
-import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
 import { Post, PostStatus } from '../../../models/post.model';
 
 @Component({
   selector: 'app-post-list',
   standalone: true,
-  imports: [
-    CommonModule,
-    RouterLink,
-    MatTableModule,
-    MatButtonModule,
-    MatIconModule,
-    MatChipsModule,
-    MatCardModule
-  ],
+  imports: [CommonModule, RouterLink, MatIconModule, MatButtonModule],
   template: `
-    <div class="post-list-header">
-      <h1>Posts</h1>
-      <button mat-raised-button color="primary" routerLink="/posts/new">
-        <mat-icon>add</mat-icon>
-        New Post
-      </button>
-    </div>
+    <div class="pf-page">
+      <div class="pf-page-header">
+        <div>
+          <h1 class="pf-title">Posts</h1>
+          <p class="pf-subtitle">Draft, refine and schedule your content across platforms</p>
+        </div>
+        <a mat-flat-button class="pf-btn-primary" routerLink="/posts/new">
+          <mat-icon>add</mat-icon>
+          New Post
+        </a>
+      </div>
 
-    <mat-card>
-      <mat-card-content>
-        <table mat-table [dataSource]="posts" class="post-table">
-          <ng-container matColumnDef="text">
-            <th mat-header-cell *matHeaderCellDef>Content</th>
-            <td mat-cell *matCellDef="let post">{{ post.text | slice:0:80 }}{{ post.text.length > 80 ? '...' : '' }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="platforms">
-            <th mat-header-cell *matHeaderCellDef>Platforms</th>
-            <td mat-cell *matCellDef="let post">
-              <mat-chip-set>
-                <mat-chip *ngFor="let platform of post.targetPlatforms">{{ platform }}</mat-chip>
-              </mat-chip-set>
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef>Status</th>
-            <td mat-cell *matCellDef="let post">
-              <mat-chip [color]="getStatusColor(post.status)" selected>{{ post.status }}</mat-chip>
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="createdAt">
-            <th mat-header-cell *matHeaderCellDef>Created</th>
-            <td mat-cell *matCellDef="let post">{{ post.createdAt | date:'medium' }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Actions</th>
-            <td mat-cell *matCellDef="let post">
-              <button mat-icon-button [routerLink]="['/posts', post.id]">
+      <ng-container *ngIf="posts.length; else empty">
+        <div class="pf-grid pf-grid--posts">
+          <article class="pf-card pf-card--hover post-card" *ngFor="let post of posts">
+            <div class="post-card__head">
+              <span class="pf-status" [class]="statusClass(post.status)">{{ post.status }}</span>
+              <span class="post-card__date">{{ post.createdAt | date: 'MMM d' }}</span>
+              <button mat-icon-button class="post-card__edit" [routerLink]="['/posts', post.id]" aria-label="Edit post">
                 <mat-icon>edit</mat-icon>
               </button>
-            </td>
-          </ng-container>
+            </div>
+            <p class="post-card__text">{{ post.text }}</p>
+            <div class="post-card__platforms">
+              <span class="pf-badge" *ngFor="let p of post.targetPlatforms" [class]="'pf-badge--' + p.toLowerCase()">
+                <mat-icon>{{ platformIcon(p) }}</mat-icon>
+                {{ platformLabel(p) }}
+              </span>
+            </div>
+          </article>
+        </div>
+      </ng-container>
 
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-        </table>
-      </mat-card-content>
-    </mat-card>
-  `,
-  styles: [`
-    .post-list-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-    .post-list-header h1 {
-      margin: 0;
-      font-weight: 500;
-    }
-    .post-table {
-      width: 100%;
-    }
-  `]
+      <ng-template #empty>
+        <div class="pf-empty">
+          <mat-icon>post_add</mat-icon>
+          <h3>No posts yet</h3>
+          <p>Create your first post and publish it across your platforms.</p>
+          <a mat-flat-button class="pf-btn-primary" routerLink="/posts/new">
+            <mat-icon>add</mat-icon>
+            Create your first post
+          </a>
+        </div>
+      </ng-template>
+    </div>
+  `
 })
 export class PostListComponent {
-  displayedColumns: string[] = ['text', 'platforms', 'status', 'createdAt', 'actions'];
+  posts: Post[] = [
+    {
+      id: '1',
+      text: 'The future of content is not just created — it is forged. Discover how PostForge turns a single idea into a cross-platform launch. #PostForge',
+      mediaAssets: [],
+      targetPlatforms: ['facebook', 'instagram'],
+      status: PostStatus.Scheduled,
+      createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: '2',
+      text: 'We just shipped AI caption generation. Describe the vibe, pick the tone, and let the machine do the heavy lifting for your next campaign.',
+      mediaAssets: [],
+      targetPlatforms: ['youtube', 'tiktok'],
+      status: PostStatus.Published,
+      createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: '3',
+      text: 'Campaign planning just got a lot easier. Group posts under a goal, set your channels, and keep the whole team aligned on one calendar.',
+      mediaAssets: [],
+      targetPlatforms: ['facebook'],
+      status: PostStatus.Draft,
+      createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+  ];
 
-  posts: Post[] = [];
+  statusClass(status: PostStatus): string {
+    return 'pf-status--' + status.toLowerCase();
+  }
 
-  getStatusColor(status: PostStatus): string {
-    switch (status) {
-      case PostStatus.Draft: return '';
-      case PostStatus.Ready: return 'accent';
-      case PostStatus.Scheduled: return 'primary';
-      case PostStatus.Publishing: return 'primary';
-      case PostStatus.Published: return 'accent';
-      case PostStatus.Failed: return 'warn';
-      default: return '';
+  platformIcon(platform: string): string {
+    switch (platform.toLowerCase()) {
+      case 'facebook': return 'thumb_up';
+      case 'instagram': return 'photo_camera';
+      case 'tiktok': return 'music_note';
+      case 'youtube': return 'play_circle';
+      default: return 'language';
+    }
+  }
+
+  platformLabel(platform: string): string {
+    switch (platform.toLowerCase()) {
+      case 'facebook': return 'Facebook';
+      case 'instagram': return 'Instagram';
+      case 'tiktok': return 'TikTok';
+      case 'youtube': return 'YouTube';
+      default: return platform;
     }
   }
 }

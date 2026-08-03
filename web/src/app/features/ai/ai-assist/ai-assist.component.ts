@@ -7,7 +7,6 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatChipsModule } from '@angular/material/chips';
 
 @Component({
   selector: 'app-ai-assist',
@@ -20,136 +19,114 @@ import { MatChipsModule } from '@angular/material/chips';
     MatInputModule,
     MatSelectModule,
     MatButtonModule,
-    MatIconModule,
-    MatChipsModule
+    MatIconModule
   ],
   template: `
-    <div class="ai-container">
-      <h1>AI Assist</h1>
-      <p class="subtitle">Generate or improve your content with AI assistance</p>
+    <div class="pf-page">
+      <div class="pf-page-header">
+        <div>
+          <h1 class="pf-title">AI Assist</h1>
+          <p class="pf-subtitle">Generate or polish your content with your own AI providers</p>
+        </div>
+      </div>
 
-      <div class="ai-grid">
-        <mat-card class="ai-card">
-          <mat-card-header>
-            <mat-icon mat-card-avatar>auto_awesome</mat-icon>
-            <mat-card-title>Generate Caption</mat-card-title>
-            <mat-card-subtitle>Create a caption from a brief description</mat-card-subtitle>
-          </mat-card-header>
-          <mat-card-content>
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Content Brief</mat-label>
-              <textarea matInput [(ngModel)]="captionBrief" rows="4" placeholder="Describe what you want the post to say..."></textarea>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Tone</mat-label>
-              <mat-select [(ngModel)]="selectedTone">
-                <mat-option value="professional">Professional</mat-option>
-                <mat-option value="casual">Casual</mat-option>
-                <mat-option value="humorous">Humorous</mat-option>
-                <mat-option value="inspirational">Inspirational</mat-option>
-              </mat-select>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>AI Provider</mat-label>
-              <mat-select [(ngModel)]="selectedTextProvider">
-                <mat-option value="openai">OpenAI</mat-option>
-                <mat-option value="anthropic">Anthropic</mat-option>
-                <mat-option value="gemini">Google Gemini</mat-option>
-                <mat-option value="foundry">Microsoft Foundry</mat-option>
-              </mat-select>
-            </mat-form-field>
-          </mat-card-content>
-          <mat-card-actions>
-            <button mat-raised-button color="primary" (click)="generateCaption()" [disabled]="!captionBrief">
+      <div class="pf-grid pf-grid--ai">
+        <mat-card class="pf-card pf-ai-card">
+          <div class="pf-ai-card__header">
+            <div class="pf-feature-icon">
               <mat-icon>psychology</mat-icon>
-              Generate Caption
+            </div>
+            <div>
+              <h2>Generate caption</h2>
+              <p>Turn a brief into a ready-to-publish caption</p>
+            </div>
+          </div>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Content brief</mat-label>
+            <textarea matInput [(ngModel)]="captionBrief" rows="4" placeholder="Describe what you want the post to say..."></textarea>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Tone</mat-label>
+            <mat-select [(ngModel)]="selectedTone">
+              <mat-option value="professional">Professional</mat-option>
+              <mat-option value="casual">Casual</mat-option>
+              <mat-option value="humorous">Humorous</mat-option>
+              <mat-option value="inspirational">Inspirational</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>AI provider</mat-label>
+            <mat-select [(ngModel)]="selectedTextProvider">
+              <mat-option value="openai">OpenAI</mat-option>
+              <mat-option value="anthropic">Anthropic</mat-option>
+              <mat-option value="gemini">Google Gemini</mat-option>
+              <mat-option value="foundry">Microsoft Foundry</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <div class="pf-ai-card__actions">
+            <button mat-flat-button class="pf-btn-primary" (click)="generateCaption()" [disabled]="!captionBrief">
+              <mat-icon>auto_awesome</mat-icon>
+              Generate caption
             </button>
-          </mat-card-actions>
+          </div>
         </mat-card>
 
-        <mat-card class="ai-card">
-          <mat-card-header>
-            <mat-icon mat-card-avatar>image</mat-icon>
-            <mat-card-title>Generate Image</mat-card-title>
-            <mat-card-subtitle>Create an image from a text prompt</mat-card-subtitle>
-          </mat-card-header>
-          <mat-card-content>
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Image Prompt</mat-label>
-              <textarea matInput [(ngModel)]="imagePrompt" rows="4" placeholder="Describe the image you want to generate..."></textarea>
-            </mat-form-field>
+        <mat-card class="pf-card pf-ai-card">
+          <div class="pf-ai-card__header">
+            <div class="pf-feature-icon">
+              <mat-icon>image</mat-icon>
+            </div>
+            <div>
+              <h2>Generate image</h2>
+              <p>Create visuals from a text prompt</p>
+            </div>
+          </div>
 
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>AI Provider</mat-label>
-              <mat-select [(ngModel)]="selectedImageProvider">
-                <mat-option value="openai">OpenAI (DALL-E)</mat-option>
-                <mat-option value="foundry">Microsoft Foundry</mat-option>
-              </mat-select>
-            </mat-form-field>
-          </mat-card-content>
-          <mat-card-actions>
-            <button mat-raised-button color="primary" (click)="generateImage()" [disabled]="!imagePrompt">
+          <mat-form-field appearance="outline">
+            <mat-label>Image prompt</mat-label>
+            <textarea matInput [(ngModel)]="imagePrompt" rows="4" placeholder="Describe the image you want to generate..."></textarea>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>AI provider</mat-label>
+            <mat-select [(ngModel)]="selectedImageProvider">
+              <mat-option value="openai">OpenAI (DALL-E)</mat-option>
+              <mat-option value="foundry">Microsoft Foundry</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <div class="pf-ai-card__actions">
+            <button mat-flat-button class="pf-btn-primary" (click)="generateImage()" [disabled]="!imagePrompt">
               <mat-icon>auto_awesome</mat-icon>
-              Generate Image
+              Generate image
             </button>
-          </mat-card-actions>
+          </div>
         </mat-card>
       </div>
 
-      <mat-card class="result-card" *ngIf="generatedContent">
-        <mat-card-header>
-          <mat-icon mat-card-avatar>check_circle</mat-icon>
-          <mat-card-title>Generated Content</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <p>{{ generatedContent }}</p>
-        </mat-card-content>
-        <mat-card-actions align="end">
+      <mat-card class="pf-card pf-result" *ngIf="generatedContent">
+        <div class="pf-result__head">
+          <mat-icon>check_circle</mat-icon>
+          Generated content
+        </div>
+        <p class="pf-result__text">{{ generatedContent }}</p>
+        <div class="pf-form-actions" style="padding:0">
           <button mat-button (click)="copyContent()">
             <mat-icon>content_copy</mat-icon>
             Copy
           </button>
-          <button mat-raised-button color="primary">
+          <button mat-flat-button class="pf-btn-primary">
             <mat-icon>add</mat-icon>
             Use in New Post
           </button>
-        </mat-card-actions>
+        </div>
       </mat-card>
     </div>
-  `,
-  styles: [`
-    .ai-container h1 {
-      font-weight: 500;
-      margin-bottom: 4px;
-    }
-    .subtitle {
-      color: rgba(0, 0, 0, 0.54);
-      margin-bottom: 24px;
-    }
-    .ai-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      margin-bottom: 24px;
-    }
-    .ai-card {
-      height: fit-content;
-    }
-    .full-width {
-      width: 100%;
-      margin-bottom: 16px;
-    }
-    .result-card {
-      margin-top: 16px;
-    }
-    @media (max-width: 768px) {
-      .ai-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-  `]
+  `
 })
 export class AiAssistComponent {
   captionBrief = '';
@@ -160,11 +137,17 @@ export class AiAssistComponent {
   generatedContent: string | null = null;
 
   generateCaption(): void {
-    this.generatedContent = 'Generated caption based on your brief with ' + this.selectedTone + ' tone using ' + this.selectedTextProvider + '.';
+    this.generatedContent =
+      'Generated caption based on your brief with a ' +
+      this.selectedTone +
+      ' tone using ' +
+      this.selectedTextProvider +
+      '.';
   }
 
   generateImage(): void {
-    this.generatedContent = 'Image will be generated from your prompt using ' + this.selectedImageProvider + '.';
+    this.generatedContent =
+      'Image will be generated from your prompt using ' + this.selectedImageProvider + '.';
   }
 
   copyContent(): void {

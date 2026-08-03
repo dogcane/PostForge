@@ -1,40 +1,69 @@
-import { Component } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, MatListModule, MatIconModule],
+  imports: [RouterLink, RouterLinkActive, MatIconModule],
   template: `
-    <mat-nav-list>
-      <mat-list-item routerLink="/posts" routerLinkActive="active-link">
-        <mat-icon matListItemIcon>article</mat-icon>
-        <span matListItemTitle>Posts</span>
-      </mat-list-item>
-      <mat-list-item routerLink="/campaigns" routerLinkActive="active-link">
-        <mat-icon matListItemIcon>campaign</mat-icon>
-        <span matListItemTitle>Campaigns</span>
-      </mat-list-item>
-      <mat-list-item routerLink="/scheduling" routerLinkActive="active-link">
-        <mat-icon matListItemIcon>calendar_month</mat-icon>
-        <span matListItemTitle>Scheduling</span>
-      </mat-list-item>
-      <mat-list-item routerLink="/ai" routerLinkActive="active-link">
-        <mat-icon matListItemIcon>auto_awesome</mat-icon>
-        <span matListItemTitle>AI Assist</span>
-      </mat-list-item>
-    </mat-nav-list>
-  `,
-  styles: [`
-    .active-link {
-      background: rgba(63, 81, 181, 0.1);
-      border-left: 3px solid #3f51b5;
-    }
-    mat-nav-list {
-      padding-top: 8px;
-    }
-  `]
+    <aside class="pf-sidebar" [class.open]="open">
+      <div class="pf-sidebar__glow"></div>
+      <div class="pf-sidebar__inner">
+        <div class="pf-brand">
+          <div class="pf-logo">
+            <mat-icon>auto_fix_high</mat-icon>
+          </div>
+          <div class="pf-brand__text">
+            <span class="pf-brand__name">PostForge</span>
+            <span class="pf-brand__sub">Content Studio</span>
+          </div>
+        </div>
+
+        <a class="pf-cta" routerLink="/posts/new" (click)="close.emit()">
+          <mat-icon>add</mat-icon>
+          <span>New Post</span>
+        </a>
+
+        <p class="pf-sidebar__label">Workspace</p>
+        <nav class="pf-nav">
+          <a class="pf-nav__item" routerLink="/posts" routerLinkActive="active" (click)="close.emit()">
+            <mat-icon>article</mat-icon>
+            <span>Posts</span>
+          </a>
+          <a class="pf-nav__item" routerLink="/campaigns" routerLinkActive="active" (click)="close.emit()">
+            <mat-icon>campaign</mat-icon>
+            <span>Campaigns</span>
+          </a>
+          <a class="pf-nav__item" routerLink="/scheduling" routerLinkActive="active" (click)="close.emit()">
+            <mat-icon>calendar_month</mat-icon>
+            <span>Editorial Calendar</span>
+          </a>
+        </nav>
+
+        <p class="pf-sidebar__label">Tools</p>
+        <nav class="pf-nav">
+          <a class="pf-nav__item" routerLink="/ai" routerLinkActive="active" (click)="close.emit()">
+            <mat-icon>auto_awesome</mat-icon>
+            <span>AI Assist</span>
+          </a>
+        </nav>
+
+        <div class="pf-sidebar__footer">
+          <div class="pf-user">
+            <div class="pf-avatar">A</div>
+            <div class="pf-user__meta">
+              <span class="pf-user__name">Admin</span>
+              <span class="pf-user__role">Workspace</span>
+            </div>
+            <mat-icon class="pf-user__gear">settings</mat-icon>
+          </div>
+        </div>
+      </div>
+    </aside>
+  `
 })
-export class SidebarComponent {}
+export class SidebarComponent {
+  @Input() open = false;
+  @Output() close = new EventEmitter<void>();
+}
