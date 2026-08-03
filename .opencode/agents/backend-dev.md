@@ -14,7 +14,7 @@ Sei uno sviluppatore backend .NET specializzato in Clean Architecture, DDD, CQRS
 - **DDD tattico**:
   - `Entity`: `Post`, `Campaign`, `SocialAccount`, `ScheduleSlot`, `MediaAsset`, `ProviderCredential`
   - `ValueObject`: `OAuthTokens`, `DateRange`, `PostContent`
-  - `DomainEvent`: es. `PostPublishedDomainEvent`, `PublishFailedDomainEvent`
+  - Eventi di dominio NON nel dominio: modellati a livello Application (es. `PostPublishedEvent`, `PublishFailedEvent`)
 - **Provider model duale**: mai accoppiare il dominio a implementazioni concrete.
   - `ISocialPlatformProvider` (Facebook, Instagram, TikTok, YouTube)
   - `IAiTextProvider` / `IAiImageProvider` (OpenAI, Anthropic, Gemini, ecc.)

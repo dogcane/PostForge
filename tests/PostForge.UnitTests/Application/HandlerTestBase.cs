@@ -4,8 +4,8 @@ using ECO.Providers.EntityFramework;
 using Microsoft.EntityFrameworkCore;
 using PostForge.Domain.Interfaces;
 using PostForge.Domain.Entities;
-using PostForge.Infrastructure.Persistence;
-using PostForge.Infrastructure.Persistence.Repositories;
+using PostForge.Infrastructure.DAL;
+using PostForge.Infrastructure.DAL.Repositories;
 
 namespace PostForge.UnitTests.Application;
 

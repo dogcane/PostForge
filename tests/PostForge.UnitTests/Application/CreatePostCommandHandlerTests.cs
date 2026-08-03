@@ -3,7 +3,7 @@ using FluentValidation;
 using PostForge.Application.Posts.Commands.CreatePost;
 using PostForge.Domain.Entities;
 using PostForge.Domain.ValueObjects;
-using PostForge.Infrastructure.Persistence.Repositories;
+using PostForge.Infrastructure.DAL.Repositories;
 
 namespace PostForge.UnitTests.Application;
 

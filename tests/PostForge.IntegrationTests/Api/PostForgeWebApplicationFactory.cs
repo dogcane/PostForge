@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PostForge.Api.Controllers;
-using PostForge.Infrastructure.Persistence;
+using PostForge.Infrastructure.DAL;
 
 namespace PostForge.IntegrationTests.Api;
 

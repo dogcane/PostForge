@@ -6,7 +6,7 @@ using PostForge.Application.Posts.Commands.CreatePost;
 using PostForge.Application.Posts.DTOs;
 using PostForge.Domain.Entities;
 using PostForge.Domain.ValueObjects;
-using PostForge.Infrastructure.Persistence;
+using PostForge.Infrastructure.DAL;
 
 namespace PostForge.IntegrationTests.Api;
 

@@ -2,7 +2,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using PostForge.Domain.Entities;
 using PostForge.Domain.ValueObjects;
-using PostForge.Infrastructure.Persistence;
+using PostForge.Infrastructure.DAL;
 
 namespace PostForge.IntegrationTests.Infrastructure;
 

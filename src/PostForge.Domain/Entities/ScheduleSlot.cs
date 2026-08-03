@@ -1,6 +1,4 @@
 using ECO;
-using ECO.Events;
-using PostForge.Domain.Events;
 using PostForge.Domain.ValueObjects;
 using Resulz;
 using Resulz.Validation;
@@ -9,8 +7,6 @@ namespace PostForge.Domain.Entities;
 
 public class ScheduleSlot : AggregateRoot<Guid>
 {
-    private readonly List<IDomainEvent> _domainEvents = [];
-
     public Guid Id => Identity;
     public Guid PostId { get; private set; }
     public SocialPlatform Platform { get; private set; }
@@ -19,7 +15,6 @@ public class ScheduleSlot : AggregateRoot<Guid>
     public int RetryCount { get; private set; }
     public string? LastError { get; private set; }
     public DateTime? PublishedAtUtc { get; private set; }
-    public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
 
     private ScheduleSlot() : base(Guid.NewGuid()) { }
 
@@ -51,7 +46,6 @@ public class ScheduleSlot : AggregateRoot<Guid>
             return OperationResult.MakeFailure(ErrorMessage.Create("Status", $"Cannot publish a slot with status {Status}."));
         Status = PostStatus.Published;
         PublishedAtUtc = DateTime.UtcNow;
-        AddDomainEvent(new PostPublishedDomainEvent(PostId, Platform, PublishedAtUtc.Value));
         return OperationResult.MakeSuccess();
     }
 
@@ -66,13 +60,4 @@ public class ScheduleSlot : AggregateRoot<Guid>
     }
 
     public bool CanRetry => RetryCount < 3;
-
-    public void AddDomainEvent(IDomainEvent domainEvent) =>
-        _domainEvents.Add(domainEvent);
-
-    public void RemoveDomainEvent(IDomainEvent domainEvent) =>
-        _domainEvents.Remove(domainEvent);
-
-    public void ClearDomainEvents() =>
-        _domainEvents.Clear();
 }

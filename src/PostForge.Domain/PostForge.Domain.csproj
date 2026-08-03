@@ -8,7 +8,6 @@
 
   <ItemGroup>
     <PackageReference Include="ECO.Core" Version="3.0.1" />
-    <PackageReference Include="ECO.Core.DomainEvents" Version="3.0.1" />
     <PackageReference Include="Resulz" Version="1.6.0" />
   </ItemGroup>
 

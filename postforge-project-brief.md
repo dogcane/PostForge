@@ -72,7 +72,7 @@ Clean Architecture a livelli, con il provider model concentrato nell'Infrastruct
 
 - **API & scheduling host** — ASP.NET Core Web API + un worker per la pubblicazione/schedulazione.
 - **Application** — casi d'uso in CQRS (MediatR): comandi come `SchedulePostCommand`, `PublishPostCommand`, `GenerateCaptionCommand`.
-- **Domain** — entità e regole: `Post`, `Campaign`, `ScheduleSlot`, `MediaAsset`, con eventi di dominio (es. `PostPublishedDomainEvent`).
+- **Domain** — entità e regole: `Post`, `Campaign`, `ScheduleSlot`, `MediaAsset`. Eventi di dominio modellati a livello Application (es. `PostPublishedEvent`).
 - **Infrastructure** — due famiglie di provider intercambiabili dietro interfacce comuni: provider social e provider AI, più persistenza e messaging.
 
 ## 9. Provider model — social
@@ -167,10 +167,11 @@ PostForge/
 │   │   ├── Scheduling/
 │   │   └── Ai/
 │   ├── PostForge.Infrastructure/
-│   │   ├── Persistence/
 │   │   ├── Providers.Social/
 │   │   ├── Providers.Ai/
 │   │   └── Messaging/
+│   ├── PostForge.Infrastructure.DAL/
+│   │   └── Persistence (PostForgeDbContext + repository implementations)
 │   ├── PostForge.Api/
 │   ├── PostForge.Worker/
 │   └── web/                    # Angular app

@@ -1,13 +1,8 @@
 using Azure.Messaging.ServiceBus;
-using ECO.Data;
-using ECO.Providers.EntityFramework;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using PostForge.Domain.Interfaces;
+using PostForge.Infrastructure.DAL;
 using PostForge.Infrastructure.Messaging;
-using PostForge.Infrastructure.Persistence;
-using PostForge.Infrastructure.Persistence.Repositories;
 using PostForge.Infrastructure.Providers.Ai;
 using PostForge.Infrastructure.Providers.Social;
 
@@ -17,40 +12,7 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddSingleton<IPersistenceUnitFactory>(sp =>
-        {
-            var config = sp.GetRequiredService<IConfiguration>();
-            var connectionString = config.GetConnectionString("PostForgeDb")
-                ?? throw new InvalidOperationException("Connection string 'PostForgeDb' not found.");
-
-            var dbContextOptions = new DbContextOptionsBuilder<PostForgeDbContext>()
-                .UseSqlServer(connectionString)
-                .Options;
-
-            var factory = new PersistenceUnitFactory();
-            var unit = new EntityFrameworkPersistenceUnit<PostForgeDbContext>(
-                "PostForgeUnit",
-                dbContextOptions,
-                null);
-
-            unit.AddClass<Domain.Entities.Post, Guid>();
-            unit.AddClass<Domain.Entities.Campaign, Guid>();
-            unit.AddClass<Domain.Entities.ScheduleSlot, Guid>();
-            unit.AddClass<Domain.Entities.SocialAccount, Guid>();
-            unit.AddClass<Domain.Entities.ProviderCredential, Guid>();
-
-            factory.AddPersistenceUnit(unit);
-            return factory;
-        });
-
-        services.AddScoped<IDataContext>(sp =>
-            sp.GetRequiredService<IPersistenceUnitFactory>().OpenDataContext());
-
-        services.AddScoped<IPostRepository, PostRepository>();
-        services.AddScoped<ICampaignRepository, CampaignRepository>();
-        services.AddScoped<IScheduleSlotRepository, ScheduleSlotRepository>();
-        services.AddScoped<ISocialAccountRepository, SocialAccountRepository>();
-        services.AddScoped<IProviderCredentialRepository, ProviderCredentialRepository>();
+        services.AddDataAccess(configuration);
 
         RegisterSocialProviders(services);
         RegisterAiProviders(services);

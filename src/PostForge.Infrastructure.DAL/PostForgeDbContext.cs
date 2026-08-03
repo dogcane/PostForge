@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PostForge.Domain.Entities;
 using PostForge.Domain.ValueObjects;
 
-namespace PostForge.Infrastructure.Persistence;
+namespace PostForge.Infrastructure.DAL;
 
 public class PostForgeDbContext : DbContext
 {
@@ -50,7 +50,6 @@ public class PostForgeDbContext : DbContext
             entity.Property(e => e.CampaignId);
             entity.Property(e => e.CreatedAtUtc);
             entity.Property(e => e.UpdatedAtUtc);
-            entity.Ignore(e => e.DomainEvents);
             entity.Ignore(e => e.TargetPlatforms);
 
             entity.HasMany<MediaAsset>("_mediaAssetsField")
@@ -99,7 +98,6 @@ public class PostForgeDbContext : DbContext
             entity.Property(e => e.RetryCount);
             entity.Property(e => e.LastError).HasMaxLength(2000);
             entity.Property(e => e.PublishedAtUtc);
-            entity.Ignore(e => e.DomainEvents);
         });
 
         modelBuilder.Entity<SocialAccount>(entity =>

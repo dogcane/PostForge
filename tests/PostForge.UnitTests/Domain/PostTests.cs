@@ -1,6 +1,5 @@
 using FluentAssertions;
 using PostForge.Domain.Entities;
-using PostForge.Domain.Events;
 using PostForge.Domain.ValueObjects;
 
 namespace PostForge.UnitTests.Domain;
@@ -14,14 +13,6 @@ public class PostTests
 
         result.Success.Should().BeTrue();
         result.Value!.Status.Should().Be(PostStatus.Draft);
-    }
-
-    [Fact]
-    public void CreatingPost_ShouldRaisePostCreatedDomainEvent()
-    {
-        var result = Post.Create("Test content");
-
-        result.Value!.DomainEvents.Should().ContainSingle(e => e is PostCreatedDomainEvent);
     }
 
     [Fact]
@@ -52,19 +43,14 @@ public class PostTests
     }
 
     [Fact]
-    public void SetStatus_ShouldChangeStatusAndRaisePostStatusChangedDomainEvent()
+    public void SetStatus_ShouldChangeStatus()
     {
         var post = Post.Create("Test content").Value!;
-        post.ClearDomainEvents();
 
         var result = post.SetStatus(PostStatus.Ready);
 
         result.Success.Should().BeTrue();
         post.Status.Should().Be(PostStatus.Ready);
-        post.DomainEvents.Should().ContainSingle(e => e is PostStatusChangedDomainEvent);
-        var domainEvent = post.DomainEvents.OfType<PostStatusChangedDomainEvent>().Single();
-        domainEvent.OldStatus.Should().Be(PostStatus.Draft);
-        domainEvent.NewStatus.Should().Be(PostStatus.Ready);
     }
 
     [Fact]

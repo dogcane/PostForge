@@ -3,7 +3,7 @@ using ECO.Providers.EntityFramework;
 using PostForge.Domain.Interfaces;
 using PostForge.Domain.Entities;
 
-namespace PostForge.Infrastructure.Persistence.Repositories;
+namespace PostForge.Infrastructure.DAL.Repositories;
 
 public class CampaignRepository : EntityFrameworkRepository<Campaign, Guid>, ICampaignRepository
 {

@@ -1,6 +1,4 @@
 using ECO;
-using ECO.Events;
-using PostForge.Domain.Events;
 using PostForge.Domain.ValueObjects;
 using Resulz;
 using Resulz.Validation;
@@ -11,13 +9,11 @@ public class Post : AggregateRoot<Guid>
 {
     private readonly List<MediaAsset> _mediaAssetsField = [];
     private readonly List<SocialPlatform> _targetPlatformsField = [];
-    private readonly List<IDomainEvent> _domainEventsField = [];
 
     public Guid Id => Identity;
     public string Text { get; private set; }
     public IReadOnlyList<MediaAsset> MediaAssets => _mediaAssetsField.AsReadOnly();
     public IReadOnlyList<SocialPlatform> TargetPlatforms => _targetPlatformsField.AsReadOnly();
-    public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEventsField.AsReadOnly();
     public Guid? CampaignId { get; private set; }
     public PostStatus Status { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
@@ -35,8 +31,6 @@ public class Post : AggregateRoot<Guid>
         Status = PostStatus.Draft;
         CreatedAtUtc = DateTime.UtcNow;
         UpdatedAtUtc = DateTime.UtcNow;
-
-        AddDomainEvent(new PostCreatedDomainEvent(Identity, CreatedAtUtc));
     }
 
     public static OperationResult<Post> Create(string text, Guid? campaignId = null)
@@ -91,7 +85,6 @@ public class Post : AggregateRoot<Guid>
         var oldStatus = Status;
         Status = newStatus;
         UpdatedAtUtc = DateTime.UtcNow;
-        AddDomainEvent(new PostStatusChangedDomainEvent(Identity, oldStatus, newStatus));
         return OperationResult.MakeSuccess();
     }
 
@@ -108,13 +101,4 @@ public class Post : AggregateRoot<Guid>
         }
         return OperationResult.MakeSuccess();
     }
-
-    public void AddDomainEvent(IDomainEvent domainEvent) =>
-        _domainEventsField.Add(domainEvent);
-
-    public void RemoveDomainEvent(IDomainEvent domainEvent) =>
-        _domainEventsField.Remove(domainEvent);
-
-    public void ClearDomainEvents() =>
-        _domainEventsField.Clear();
 }

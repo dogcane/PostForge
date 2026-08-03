@@ -4,6 +4,7 @@
     <Project Path="src/PostForge.Application/PostForge.Application.csproj" />
     <Project Path="src/PostForge.Domain/PostForge.Domain.csproj" />
     <Project Path="src/PostForge.Infrastructure/PostForge.Infrastructure.csproj" />
+    <Project Path="src/PostForge.Infrastructure.DAL/PostForge.Infrastructure.DAL.csproj" />
     <Project Path="src/PostForge.Worker/PostForge.Worker.csproj" />
   </Folder>
   <Folder Name="/tests/">

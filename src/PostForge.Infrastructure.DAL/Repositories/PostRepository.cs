@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using PostForge.Domain.Interfaces;
 using PostForge.Domain.Entities;
 
-namespace PostForge.Infrastructure.Persistence.Repositories;
+namespace PostForge.Infrastructure.DAL.Repositories;
 
 public class PostRepository : EntityFrameworkRepository<Post, Guid>, IPostRepository
 {

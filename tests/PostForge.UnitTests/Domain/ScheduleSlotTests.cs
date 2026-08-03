@@ -1,6 +1,5 @@
 using FluentAssertions;
 using PostForge.Domain.Entities;
-using PostForge.Domain.Events;
 using PostForge.Domain.ValueObjects;
 
 namespace PostForge.UnitTests.Domain;
@@ -54,20 +53,6 @@ public class ScheduleSlotTests
 
         result.Success.Should().BeTrue();
         slot.Status.Should().Be(PostStatus.Published);
-    }
-
-    [Fact]
-    public void MarkPublished_ShouldRaisePostPublishedDomainEvent()
-    {
-        var slot = ScheduleSlot.Create(_postId, SocialPlatform.Facebook, _futureDate).Value!;
-
-        slot.MarkPublished();
-
-        slot.DomainEvents.Should().ContainSingle(e => e is PostPublishedDomainEvent);
-        var domainEvent = slot.DomainEvents.OfType<PostPublishedDomainEvent>().Single();
-        domainEvent.PostId.Should().Be(_postId);
-        domainEvent.Platform.Should().Be(SocialPlatform.Facebook);
-        domainEvent.PublishedAtUtc.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
     }
 
     [Fact]

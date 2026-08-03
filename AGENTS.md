@@ -9,7 +9,7 @@ PostForge è in **Fase 0 completata**. Soluzione .NET 10 con Clean Architecture,
 - **Clean Architecture** a 4 livelli: Domain → Application → Infrastructure → API/Worker.
 - **CQRS con Mediator** (`Mediator.SourceGenerator` di martinothamar — source generator, `ValueTask<T>`, Singleton/Scoped lifetime).
 - **Provider model** duale: `ISocialPlatformProvider` per piattaforme social, `IAiTextProvider`/`IAiImageProvider` per AI.
-- **DDD tattico**: Entity, ValueObject, DomainEvent nel layer Domain.
+- **DDD tattico**: Entity, ValueObject nel layer Domain. Domain events NON nel dominio: verranno modellati a livello Application.
 - **Resilienza con Polly** (retry, circuit breaker, rate limiter) su ogni provider esterno.
 - **Persistenza con ECO**: le entità ereditano da `AggregateRoot<Guid>` / `Entity<Guid>` di ECO; repository implementano `EntityFrameworkRepository<T, Guid>`; `IDataContext` come unit of work.
 
@@ -53,7 +53,8 @@ PostForge.sln
 src/
   PostForge.Domain/        Entities/, ValueObjects/, Events/
   PostForge.Application/   Posts/, Campaigns/, Scheduling/, Ai/
-  PostForge.Infrastructure/ Persistence/, Providers.Social/, Providers.Ai/, Messaging/
+  PostForge.Infrastructure/ Providers.Social/, Providers.Ai/, Messaging/
+  PostForge.Infrastructure.DAL/  Persistence (PostForgeDbContext + repository implementations)
   PostForge.Api/
   PostForge.Worker/
 web/                       Angular SPA
@@ -82,15 +83,9 @@ infra/
 - Token OAuth e chiavi AI mai in chiaro → Key Vault + Managed Identity.
 - Provider esterni mockabili nei test (WireMock.NET).
 
-## Domain Events (ECO.Core.DomainEvents)
+## Domain Events
 
-I domain events usano `ECO.Events.IDomainEvent` (`ECO.Core.DomainEvents` su NuGet), NON una custom interface.
-
-- **Marker**: implementano `ECO.Events.IDomainEvent` (no metodi).
-- **Per-aggregate storage**: ogni `AggregateRoot<Guid>` che solleva eventi ha una `List<IDomainEvent>` privata, proprietà `IReadOnlyCollection<IDomainEvent> DomainEvents`, e metodi pubblici `AddDomainEvent`, `RemoveDomainEvent`, `ClearDomainEvents`.
-- **Dispensa**: si chiama `AddDomainEvent(new EventType(...))` nel costruttore privato o nei mutation method (es. `PostCreatedDomainEvent` in `Post`, `PostPublishedDomainEvent` in `ScheduleSlot`).
-- **EF Core**: `.Ignore(e => e.DomainEvents)` nella configurazione dell'entity.
-- **Test**: si verifica `entity.DomainEvents.Should().ContainSingle(e => e is ConcreteEvent)`. Nessuna registrazione di subscriber necessaria (eventi collezionati in memoria, dispatch avverrà fuori dal dominio).
+I domain events NON vivono nel layer Domain: le entità non espongono storage di eventi. Gli eventi saranno modellati a livello **Application** (da definire, ad es. tramite `Mediator`).
 
 ## Result pattern (Resulz)
 

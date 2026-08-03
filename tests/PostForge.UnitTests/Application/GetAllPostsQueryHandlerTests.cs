@@ -5,7 +5,7 @@ using PostForge.Application.Posts.DTOs;
 using PostForge.Application.Posts.Queries.GetAllPosts;
 using PostForge.Domain.Entities;
 using PostForge.Domain.ValueObjects;
-using PostForge.Infrastructure.Persistence.Repositories;
+using PostForge.Infrastructure.DAL.Repositories;
 
 namespace PostForge.UnitTests.Application;
 

@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\PostForge.Api\PostForge.Api.csproj" />
+    <ProjectReference Include="..\..\src\PostForge.Infrastructure.DAL\PostForge.Infrastructure.DAL.csproj" />
     <ProjectReference Include="..\..\src\PostForge.Infrastructure\PostForge.Infrastructure.csproj" />
   </ItemGroup>
 
