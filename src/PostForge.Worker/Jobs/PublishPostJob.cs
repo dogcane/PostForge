@@ -1,6 +1,7 @@
 using Mediator;
 using PostForge.Application.Scheduling.Commands.MarkSlotPublished;
 using PostForge.Application.Scheduling.Queries.GetPendingSlots;
+using PostForge.Infrastructure.Providers.Social;
 using Quartz;
 
 namespace PostForge.Worker.Jobs;
@@ -40,8 +41,17 @@ public sealed class PublishPostJob(
 
         try
         {
-            // Stub: in real implementation would resolve ISocialPlatformProvider
-            // and call PublishAsync before marking as published.
+            // Stub: resolves the social platform provider for the target platform and
+            // logs its metadata/capabilities. The actual PublishAsync call will be
+            // wired in Phase 1 once post content and OAuth tokens are loaded.
+            var registry = scope.ServiceProvider.GetRequiredService<ISocialPlatformProviderRegistry>();
+            foreach (var provider in registry.AvailableProviderKeys.Select(registry.Resolve))
+            {
+                logger.LogInformation(
+                    "Provider available: {ProviderName} ({ProviderIdentifier}) for platform {Platform}, capabilities {Capabilities}",
+                    provider.Name, provider.Identifier, provider.Platform, provider.Capabilities);
+            }
+
             await mediator.Send(new MarkSlotPublishedCommand(slotId), context.CancellationToken);
             logger.LogInformation("Successfully marked slot {SlotId} as published", slotId);
         }

@@ -28,6 +28,8 @@ public static class DependencyInjection
         services.AddScoped<ISocialPlatformProvider, InstagramProvider>();
         services.AddScoped<ISocialPlatformProvider, TikTokProvider>();
         services.AddScoped<ISocialPlatformProvider, YouTubeProvider>();
+
+        services.AddScoped<ISocialPlatformProviderRegistry, SocialPlatformProviderRegistry>();
     }
 
     private static void RegisterAiProviders(IServiceCollection services)
