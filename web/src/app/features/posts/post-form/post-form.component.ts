@@ -8,6 +8,17 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { PostContent, PostTag, PostTagType } from '../../../models/post.model';
+
+interface PlatformOption {
+  key: string;
+  label: string;
+}
+
+interface TagTypeOption {
+  value: PostTagType;
+  label: string;
+}
 
 @Component({
   selector: 'app-post-form',
@@ -51,10 +62,7 @@ import { MatIconModule } from '@angular/material/icon';
         <mat-form-field appearance="outline">
           <mat-label>Target platforms</mat-label>
           <mat-select [(ngModel)]="selectedPlatforms" multiple>
-            <mat-option value="facebook">Facebook</mat-option>
-            <mat-option value="instagram">Instagram</mat-option>
-            <mat-option value="tiktok">TikTok</mat-option>
-            <mat-option value="youtube">YouTube</mat-option>
+            <mat-option *ngFor="let p of platforms" [value]="p.key">{{ p.label }}</mat-option>
           </mat-select>
         </mat-form-field>
 
@@ -65,6 +73,54 @@ import { MatIconModule } from '@angular/material/icon';
             <mat-option *ngFor="let campaign of campaigns" [value]="campaign.id">{{ campaign.name }}</mat-option>
           </mat-select>
         </mat-form-field>
+      </mat-card>
+
+      <mat-card class="pf-card pf-form__card">
+        <div class="pf-form__title">
+          <div class="pf-feature-icon">
+            <mat-icon>people</mat-icon>
+          </div>
+          <div>
+            <h2>People & collaborators</h2>
+            <p>Tag people or add collaborators on the platforms that support it (e.g. Facebook, Instagram).</p>
+          </div>
+        </div>
+
+        <div class="pf-tags-editor">
+          <div class="pf-tags-editor__row" *ngFor="let tag of postTags; let i = index">
+            <mat-form-field appearance="outline">
+              <mat-label>Platform</mat-label>
+              <mat-select [(ngModel)]="tag.platform">
+                <mat-option *ngFor="let p of platforms" [value]="p.key">{{ p.label }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Tag type</mat-label>
+              <mat-select [(ngModel)]="tag.tagType">
+                <mat-option *ngFor="let t of tagTypes" [value]="t.value">{{ t.label }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Username</mat-label>
+              <input matInput [(ngModel)]="tag.username" placeholder="@username" [ngModelOptions]="{ updateOn: 'blur' }">
+            </mat-form-field>
+
+            <button mat-icon-button (click)="removeTag(i)" aria-label="Remove tag">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+
+          <div class="pf-tags-editor__empty" *ngIf="!postTags.length">
+            <p>No people tagged yet. Add a mention, a photo tag or a collaborator for a platform.</p>
+          </div>
+
+          <button mat-stroked-button (click)="addTag()">
+            <mat-icon>person_add</mat-icon>
+            Add tag / collaborator
+          </button>
+        </div>
       </mat-card>
 
       <mat-card class="pf-card pf-form-actions">
@@ -91,6 +147,21 @@ export class PostFormComponent {
     { id: '2', name: 'Brand Awareness Q3' }
   ];
 
+  platforms: PlatformOption[] = [
+    { key: 'facebook', label: 'Facebook' },
+    { key: 'instagram', label: 'Instagram' },
+    { key: 'tiktok', label: 'TikTok' },
+    { key: 'youtube', label: 'YouTube' }
+  ];
+
+  tagTypes: TagTypeOption[] = [
+    { value: PostTagType.Mention, label: 'Mention (@)' },
+    { value: PostTagType.UserTag, label: 'Tag on photo' },
+    { value: PostTagType.Collaborator, label: 'Collaborator' }
+  ];
+
+  postTags: PostTag[] = [];
+
   constructor(
     private route: ActivatedRoute,
     private router: Router
@@ -98,7 +169,30 @@ export class PostFormComponent {
     this.isEditing = !!this.route.snapshot.paramMap.get('id');
     if (this.isEditing) {
       this.postText = 'Sample draft content being edited...';
+      this.postTags = [
+        { platform: 'facebook', tagType: PostTagType.Collaborator, username: 'silvia.neri' },
+        { platform: 'instagram', tagType: PostTagType.Mention, username: 'marco.rossi' }
+      ];
     }
+  }
+
+  addTag(): void {
+    const platform = this.selectedPlatforms[0] ?? this.platforms[0].key;
+    this.postTags.push({ platform, tagType: PostTagType.Mention, username: '' });
+  }
+
+  removeTag(index: number): void {
+    this.postTags.splice(index, 1);
+  }
+
+  buildPayload(): PostContent {
+    return {
+      text: this.postText,
+      mediaIds: [],
+      platformKeys: this.selectedPlatforms,
+      campaignId: this.selectedCampaign ?? undefined,
+      tags: this.postTags.filter(t => t.username.trim().length > 0)
+    };
   }
 
   cancel(): void {
@@ -106,10 +200,14 @@ export class PostFormComponent {
   }
 
   save(): void {
+    const payload = this.buildPayload();
+    // TODO(wire): POST /api/v1/posts with the payload above once the API integration lands.
     this.router.navigate(['/posts']);
   }
 
   saveAndSchedule(): void {
+    const payload = this.buildPayload();
+    // TODO(wire): create the post, then open scheduling for the returned id.
     this.router.navigate(['/scheduling']);
   }
 }

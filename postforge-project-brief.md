@@ -73,20 +73,23 @@ Clean Architecture a livelli, con il provider model concentrato nell'Infrastruct
 - **API & scheduling host** — ASP.NET Core Web API + un worker per la pubblicazione/schedulazione.
 - **Application** — casi d'uso in CQRS (MediatR): comandi come `SchedulePostCommand`, `PublishPostCommand`, `GenerateCaptionCommand`.
 - **Domain** — entità e regole: `Post`, `Campaign`, `ScheduleSlot`, `MediaAsset`. Eventi di dominio modellati a livello Application (es. `PostPublishedEvent`).
-- **Infrastructure** — due famiglie di provider intercambiabili dietro interfacce comuni: provider social e provider AI, più persistenza e messaging.
+- **Domain.Providers** — interfacce e contract dei provider (`ISocialPlatformProvider`, `IAiTextProvider`, `IAiImageProvider`, registry).
+- **Infrastructure** — registry dei provider, persistenza e messaging; le implementazioni concrete vivono in progetti plugin `PostForge.Providers.<Nome>`.
 
 ## 9. Provider model — social
 
 ```csharp
 public interface ISocialPlatformProvider
 {
-    SocialPlatform Platform { get; }
+    string Identifier { get; }
     Task<OAuthTokens> ExchangeAuthorizationCodeAsync(string code, CancellationToken ct);
     Task<OAuthTokens> RefreshTokenAsync(OAuthTokens tokens, CancellationToken ct);
     Task<PublishResult> PublishAsync(PostContent content, OAuthTokens tokens, CancellationToken ct);
     Task<PostInsights?> GetInsightsAsync(string externalPostId, OAuthTokens tokens, CancellationToken ct);
 }
 ```
+
+Le piattaforme sono identificate dalla stringa `Identifier` (es. `FACEBOOK`), non da un enum: aggiungere una piattaforma non tocca il dominio.
 
 Implementazioni previste: `FacebookProvider` e `InstagramProvider` (Meta Graph API — terreno già noto), `TikTokProvider` (Content Posting API), `YouTubeProvider` (YouTube Data API v3, upload resumable per i video).
 
@@ -116,8 +119,8 @@ Stesso principio già validato in altri contesti (registry/factory + interfaccia
 
 ## 11. Modello dati (entità principali)
 
-`SocialAccount(Id, Platform, DisplayName, OAuthTokens)`
-`Post(Id, Text, MediaAssets[], TargetPlatforms[], CampaignId?, Status)`
+`SocialAccount(Id, Platform, DisplayName, OAuthTokens)` — `Platform` è l'identifier string del provider (es. `FACEBOOK`)
+`Post(Id, Text, MediaAssets[], TargetPlatforms[], CampaignId?, Status)` — `TargetPlatforms` è una collezione di identifier string
 `Campaign(Id, Name, Goal[Awareness|Reputation|LeadGen], Channel[Organic|Paid], DateRange)`
 `ScheduleSlot(Id, PostId, Platform, ScheduledAtUtc, Status, RetryCount)`
 `MediaAsset(Id, BlobUri, Type, GeneratedByAi bool, SourcePrompt?)`
@@ -160,18 +163,18 @@ PostForge/
 │   ├── PostForge.Domain/
 │   │   ├── Entities/
 │   │   ├── ValueObjects/
-│   │   └── Events/
+│   │   └── Providers/          # interfacce + contracts (ISocialPlatformProvider, IAiTextProvider, ...)
 │   ├── PostForge.Application/
 │   │   ├── Posts/
 │   │   ├── Campaigns/
 │   │   ├── Scheduling/
 │   │   └── Ai/
 │   ├── PostForge.Infrastructure/
-│   │   ├── Providers.Social/
-│   │   ├── Providers.Ai/
-│   │   └── Messaging/
+│   │   ├── Messaging/
+│   │   └── Resilience/
 │   ├── PostForge.Infrastructure.DAL/
 │   │   └── Persistence (PostForgeDbContext + repository implementations)
+│   ├── PostForge.Providers.<Nome>/  # un progetto per ogni provider (Facebook, Instagram, TikTok, YouTube, OpenAI, ...)
 │   ├── PostForge.Api/
 │   ├── PostForge.Worker/
 │   └── web/                    # Angular app

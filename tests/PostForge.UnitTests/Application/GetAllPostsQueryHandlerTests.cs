@@ -26,6 +26,7 @@ public class GetAllPostsQueryHandlerTests : HandlerTestBase
                     Text = p.Text,
                     MediaAssets = p.MediaAssets.ToList(),
                     TargetPlatforms = p.TargetPlatforms.ToList(),
+                    Tags = p.Tags.Select(t => new PostTagDto(t.Platform, t.TagType, t.Username)).ToList(),
                     CampaignId = p.CampaignId,
                     Status = p.Status,
                     CreatedAtUtc = p.CreatedAtUtc,
@@ -74,16 +75,16 @@ public class GetAllPostsQueryHandlerTests : HandlerTestBase
     public async Task Handle_ShouldFilterByPlatform()
     {
         var fbPost = Post.Create("Facebook post").Value!;
-        fbPost.ScheduleForPlatform(SocialPlatform.Facebook);
+        fbPost.ScheduleForPlatform("FACEBOOK");
         var igPost = Post.Create("Instagram post").Value!;
-        igPost.ScheduleForPlatform(SocialPlatform.Instagram);
+        igPost.ScheduleForPlatform("INSTAGRAM");
         var ctx = ((PostRepository)PostRepository).DbContext;
         ctx.Set<Post>().Add(fbPost);
         ctx.Set<Post>().Add(igPost);
         await ctx.SaveChangesAsync(CancellationToken.None);
 
         var handler = new GetAllPostsHandler(PostRepository, _mapper);
-        var query = new GetAllPostsQuery(null, SocialPlatform.Facebook, null, null);
+        var query = new GetAllPostsQuery(null, "FACEBOOK", null, null);
 
         var result = await handler.Handle(query, CancellationToken.None);
 
@@ -157,7 +158,7 @@ public class GetAllPostsQueryHandlerTests : HandlerTestBase
     public async Task Handle_ShouldMapToPostDto()
     {
         var post = Post.Create("Test content").Value!;
-        post.ScheduleForPlatform(SocialPlatform.TikTok);
+        post.ScheduleForPlatform("TIKTOK");
         var ctx = ((PostRepository)PostRepository).DbContext;
         ctx.Set<Post>().Add(post);
         await ctx.SaveChangesAsync(CancellationToken.None);
@@ -171,6 +172,26 @@ public class GetAllPostsQueryHandlerTests : HandlerTestBase
         dto.Id.Should().Be(post.Id);
         dto.Text.Should().Be("Test content");
         dto.Status.Should().Be(PostStatus.Draft);
-        dto.TargetPlatforms.Should().Contain(SocialPlatform.TikTok);
+        dto.TargetPlatforms.Should().Contain("TIKTOK");
+    }
+
+    [Fact]
+    public async Task Handle_ShouldMapTagsToDto()
+    {
+        var post = Post.Create("Test content").Value!;
+        post.ScheduleForPlatform("FACEBOOK");
+        post.AddTag(PostTag.Create("FACEBOOK", PostTagType.Collaborator, "silvia.neri").Value!);
+        var ctx = ((PostRepository)PostRepository).DbContext;
+        ctx.Set<Post>().Add(post);
+        await ctx.SaveChangesAsync(CancellationToken.None);
+
+        var handler = new GetAllPostsHandler(PostRepository, _mapper);
+        var query = new GetAllPostsQuery(null, null, null, null);
+
+        var result = await handler.Handle(query, CancellationToken.None);
+
+        var dto = result.Should().ContainSingle().Which;
+        dto.Tags.Should().ContainSingle().Which.Should().Match<PostTagDto>(t =>
+            t.Platform == "FACEBOOK" && t.TagType == PostTagType.Collaborator && t.Username == "silvia.neri");
     }
 }

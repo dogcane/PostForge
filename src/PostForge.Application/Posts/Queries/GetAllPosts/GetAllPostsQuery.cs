@@ -6,6 +6,6 @@ namespace PostForge.Application.Posts.Queries.GetAllPosts;
 
 public record GetAllPostsQuery(
     PostStatus? Status,
-    SocialPlatform? Platform,
+    string? Platform,
     DateTime? DateFrom,
     DateTime? DateTo) : IRequest<List<PostDto>>;

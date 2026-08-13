@@ -1,8 +1,12 @@
 using FluentAssertions;
+using PostForge.Domain.Providers;
+using PostForge.Domain.Providers.Contracts;
 using PostForge.Domain.ValueObjects;
 using PostForge.Infrastructure;
-using PostForge.Infrastructure.Dtos;
-using PostForge.Infrastructure.Providers.Social;
+using PostForge.Providers.Facebook;
+using PostForge.Providers.Instagram;
+using PostForge.Providers.TikTok;
+using PostForge.Providers.YouTube;
 
 namespace PostForge.UnitTests.Infrastructure;
 
@@ -119,13 +123,13 @@ public class SocialPlatformProviderTests
         | SocialPlatformCapabilities.AccountInsights
         | SocialPlatformCapabilities.AudienceInsights;
 
-    public static TheoryData<ISocialPlatformProvider, string, string, SocialPlatform, SocialPlatformCapabilities> ProviderMetadata =>
+    public static TheoryData<ISocialPlatformProvider, string, string, SocialPlatformCapabilities> ProviderMetadata =>
         new()
         {
-            { new FacebookProvider(), "Facebook", "FACEBOOK", SocialPlatform.Facebook, FacebookCapabilities },
-            { new InstagramProvider(), "Instagram", "INSTAGRAM", SocialPlatform.Instagram, InstagramCapabilities },
-            { new TikTokProvider(), "TikTok", "TIKTOK", SocialPlatform.TikTok, TikTokCapabilities },
-            { new YouTubeProvider(), "YouTube", "YOUTUBE", SocialPlatform.YouTube, YouTubeCapabilities },
+            { new FacebookProvider(), "Facebook", "FACEBOOK", FacebookCapabilities },
+            { new InstagramProvider(), "Instagram", "INSTAGRAM", InstagramCapabilities },
+            { new TikTokProvider(), "TikTok", "TIKTOK", TikTokCapabilities },
+            { new YouTubeProvider(), "YouTube", "YOUTUBE", YouTubeCapabilities },
         };
 
     public static TheoryData<ISocialPlatformProvider> Providers =>
@@ -140,11 +144,10 @@ public class SocialPlatformProviderTests
     [Theory]
     [MemberData(nameof(ProviderMetadata))]
     public void Provider_ShouldExposeExpectedMetadataAndCapabilities(
-        ISocialPlatformProvider provider, string name, string identifier, SocialPlatform platform, SocialPlatformCapabilities capabilities)
+        ISocialPlatformProvider provider, string name, string identifier, SocialPlatformCapabilities capabilities)
     {
         provider.Name.Should().Be(name);
         provider.Identifier.Should().Be(identifier);
-        provider.Platform.Should().Be(platform);
         provider.Capabilities.Should().Be(capabilities);
 
         foreach (var flag in Enum.GetValues<SocialPlatformCapabilities>().Where(f => f != SocialPlatformCapabilities.None))
@@ -158,10 +161,10 @@ public class SocialPlatformProviderTests
     {
         ISocialPlatformProvider provider = new InstagramProvider();
         var act = () => provider.ScheduleAsync(
-            new PostContentDto("text", [], SocialPlatform.Instagram),
-            new PublishSettingsDto(),
+            new PostContent("text", [], "INSTAGRAM"),
+            new PublishSettings(),
             DateTime.UtcNow,
-            new OAuthTokensDto("token", "refresh", DateTime.UtcNow),
+            new OAuthTokens("token", "refresh", DateTime.UtcNow),
             CancellationToken.None);
 
         act.Should().ThrowAsync<NotSupportedException>();
@@ -171,7 +174,7 @@ public class SocialPlatformProviderTests
     public void TikTokProvider_GetCommentsAsync_ShouldThrowNotSupported()
     {
         ISocialPlatformProvider provider = new TikTokProvider();
-        var act = () => provider.GetCommentsAsync("video-1", new OAuthTokensDto("token", "refresh", DateTime.UtcNow), CancellationToken.None);
+        var act = () => provider.GetCommentsAsync("video-1", new OAuthTokens("token", "refresh", DateTime.UtcNow), CancellationToken.None);
 
         act.Should().ThrowAsync<NotSupportedException>();
     }
@@ -181,9 +184,9 @@ public class SocialPlatformProviderTests
     {
         ISocialPlatformProvider provider = new YouTubeProvider();
         var act = () => provider.PublishCarouselAsync(
-            new PostContentDto("text", ["https://cdn.example.com/1.jpg"], SocialPlatform.YouTube),
-            new PublishSettingsDto(),
-            new OAuthTokensDto("token", "refresh", DateTime.UtcNow),
+            new PostContent("text", ["https://cdn.example.com/1.jpg"], "YOUTUBE"),
+            new PublishSettings(),
+            new OAuthTokens("token", "refresh", DateTime.UtcNow),
             CancellationToken.None);
 
         act.Should().ThrowAsync<NotSupportedException>();
@@ -193,11 +196,11 @@ public class SocialPlatformProviderTests
     [MemberData(nameof(Providers))]
     public void CoreMethods_ShouldRemainPhaseStubs(ISocialPlatformProvider provider)
     {
-        var tokens = new OAuthTokensDto("token", "refresh", DateTime.UtcNow);
+        var tokens = new OAuthTokens("token", "refresh", DateTime.UtcNow);
 
         provider.Invoking(p => p.ExchangeAuthorizationCodeAsync("code", CancellationToken.None)).Should().ThrowAsync<NotImplementedException>();
         provider.Invoking(p => p.RefreshTokenAsync(tokens, CancellationToken.None)).Should().ThrowAsync<NotImplementedException>();
-        provider.Invoking(p => p.PublishAsync(new PostContentDto("text", [], provider.Platform), new PublishSettingsDto(), tokens, CancellationToken.None)).Should().ThrowAsync<NotImplementedException>();
+        provider.Invoking(p => p.PublishAsync(new PostContent("text", [], provider.Identifier), new PublishSettings(), tokens, CancellationToken.None)).Should().ThrowAsync<NotImplementedException>();
         provider.Invoking(p => p.GetInsightsAsync("post-1", tokens, CancellationToken.None)).Should().ThrowAsync<NotImplementedException>();
     }
 
@@ -207,13 +210,12 @@ public class SocialPlatformProviderTests
 
         public string Name => "Test";
         public string Identifier => "TEST";
-        public SocialPlatform Platform => SocialPlatform.Facebook;
         public SocialPlatformCapabilities Capabilities { get; }
 
-        public Task<OAuthTokensDto> ExchangeAuthorizationCodeAsync(string code, CancellationToken ct) => throw new NotImplementedException();
-        public Task<OAuthTokensDto> RefreshTokenAsync(OAuthTokensDto tokens, CancellationToken ct) => throw new NotImplementedException();
-        public Task<PublishResultDto> PublishAsync(PostContentDto content, PublishSettingsDto settings, OAuthTokensDto tokens, CancellationToken ct) => throw new NotImplementedException();
-        public Task<PostInsightsDto?> GetInsightsAsync(string externalPostId, OAuthTokensDto tokens, CancellationToken ct) => throw new NotImplementedException();
+        public Task<OAuthTokens> ExchangeAuthorizationCodeAsync(string code, CancellationToken ct) => throw new NotImplementedException();
+        public Task<OAuthTokens> RefreshTokenAsync(OAuthTokens tokens, CancellationToken ct) => throw new NotImplementedException();
+        public Task<PublishResult> PublishAsync(PostContent content, PublishSettings settings, OAuthTokens tokens, CancellationToken ct) => throw new NotImplementedException();
+        public Task<PostInsights?> GetInsightsAsync(string externalPostId, OAuthTokens tokens, CancellationToken ct) => throw new NotImplementedException();
     }
 
     [Fact]

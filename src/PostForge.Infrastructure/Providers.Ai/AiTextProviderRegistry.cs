@@ -1,3 +1,5 @@
+using PostForge.Domain.Providers;
+
 namespace PostForge.Infrastructure.Providers.Ai;
 
 public class AiTextProviderRegistry : IProviderRegistry<IAiTextProvider>

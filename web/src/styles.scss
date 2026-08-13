@@ -598,6 +598,29 @@ body {
   gap: 8px;
   margin-top: auto;
 }
+.post-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.pf-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--pf-text-muted);
+  background: var(--pf-surface-strong);
+  border: 1px solid var(--pf-border);
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+.pf-tag mat-icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+  color: var(--pf-primary);
+}
 
 /* ================= Campaign cards ================= */
 .campaign-card {
@@ -693,6 +716,30 @@ body {
 }
 .pf-form > .pf-form-actions {
   margin-top: 16px;
+}
+.pf-tags-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.pf-tags-editor__row {
+  display: grid;
+  grid-template-columns: 1.2fr 1.2fr 1.6fr auto;
+  gap: 12px;
+  align-items: center;
+}
+.pf-tags-editor__row > .mat-mdc-icon-button {
+  flex-shrink: 0;
+}
+.pf-tags-editor__empty p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--pf-text-muted);
+  padding: 4px 0 8px;
+}
+.pf-tags-editor > .mdc-button.mat-stroked-button {
+  align-self: flex-start;
+  margin-top: 4px;
 }
 
 /* ================= Calendar ================= */

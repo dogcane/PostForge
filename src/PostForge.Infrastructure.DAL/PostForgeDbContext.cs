@@ -20,10 +20,6 @@ public class PostForgeDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        var socialPlatformConverter = new ValueConverter<SocialPlatform, string>(
-            v => v.ToString(),
-            v => (SocialPlatform)Enum.Parse(typeof(SocialPlatform), v));
-
         var postStatusConverter = new ValueConverter<PostStatus, string>(
             v => v.ToString(),
             v => (PostStatus)Enum.Parse(typeof(PostStatus), v));
@@ -40,6 +36,10 @@ public class PostForgeDbContext : DbContext
             v => v.ToString(),
             v => (ProviderCredentialScope)Enum.Parse(typeof(ProviderCredentialScope), v));
 
+        var postTagTypeConverter = new ValueConverter<PostTagType, string>(
+            v => v.ToString(),
+            v => (PostTagType)Enum.Parse(typeof(PostTagType), v));
+
         modelBuilder.Entity<Post>(entity =>
         {
             entity.ToTable("Posts");
@@ -51,6 +51,17 @@ public class PostForgeDbContext : DbContext
             entity.Property(e => e.CreatedAtUtc);
             entity.Property(e => e.UpdatedAtUtc);
             entity.Ignore(e => e.TargetPlatforms);
+
+            entity.OwnsMany(e => e.Tags, tag =>
+            {
+                tag.ToTable("PostTags");
+                tag.WithOwner().HasForeignKey("PostId");
+                tag.Property<int>("Id");
+                tag.HasKey("Id");
+                tag.Property(t => t.Platform).IsRequired().HasMaxLength(50);
+                tag.Property(t => t.TagType).HasConversion(postTagTypeConverter).HasMaxLength(50);
+                tag.Property(t => t.Username).IsRequired().HasMaxLength(200);
+            });
 
             entity.HasMany<MediaAsset>("_mediaAssetsField")
                 .WithOne()
@@ -92,7 +103,7 @@ public class PostForgeDbContext : DbContext
             entity.HasKey(e => e.Identity);
             entity.Property(e => e.Identity).HasColumnName("Id");
             entity.Property(e => e.PostId);
-            entity.Property(e => e.Platform).HasConversion(socialPlatformConverter).HasMaxLength(50);
+            entity.Property(e => e.Platform).IsRequired().HasMaxLength(50);
             entity.Property(e => e.ScheduledAtUtc);
             entity.Property(e => e.Status).HasConversion(postStatusConverter).HasMaxLength(50);
             entity.Property(e => e.RetryCount);
@@ -105,7 +116,7 @@ public class PostForgeDbContext : DbContext
             entity.ToTable("SocialAccounts");
             entity.HasKey(e => e.Identity);
             entity.Property(e => e.Identity).HasColumnName("Id");
-            entity.Property(e => e.Platform).HasConversion(socialPlatformConverter).HasMaxLength(50);
+            entity.Property(e => e.Platform).IsRequired().HasMaxLength(50);
             entity.Property(e => e.DisplayName).IsRequired().HasMaxLength(200);
             entity.Property(e => e.OAuthTokens).IsRequired();
             entity.Property(e => e.CreatedAtUtc);

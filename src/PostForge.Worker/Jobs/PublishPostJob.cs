@@ -1,7 +1,7 @@
 using Mediator;
 using PostForge.Application.Scheduling.Commands.MarkSlotPublished;
 using PostForge.Application.Scheduling.Queries.GetPendingSlots;
-using PostForge.Infrastructure.Providers.Social;
+using PostForge.Domain.Providers;
 using Quartz;
 
 namespace PostForge.Worker.Jobs;
@@ -49,7 +49,7 @@ public sealed class PublishPostJob(
             {
                 logger.LogInformation(
                     "Provider available: {ProviderName} ({ProviderIdentifier}) for platform {Platform}, capabilities {Capabilities}",
-                    provider.Name, provider.Identifier, provider.Platform, provider.Capabilities);
+                    provider.Name, provider.Identifier, provider.Identifier, provider.Capabilities);
             }
 
             await mediator.Send(new MarkSlotPublishedCommand(slotId), context.CancellationToken);

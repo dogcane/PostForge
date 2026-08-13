@@ -5,6 +5,16 @@
     <Project Path="src/PostForge.Domain/PostForge.Domain.csproj" />
     <Project Path="src/PostForge.Infrastructure/PostForge.Infrastructure.csproj" />
     <Project Path="src/PostForge.Infrastructure.DAL/PostForge.Infrastructure.DAL.csproj" />
+    <Project Path="src/PostForge.Providers.Anthropic/PostForge.Providers.Anthropic.csproj" />
+    <Project Path="src/PostForge.Providers.DallE/PostForge.Providers.DallE.csproj" />
+    <Project Path="src/PostForge.Providers.Facebook/PostForge.Providers.Facebook.csproj" />
+    <Project Path="src/PostForge.Providers.GoogleGemini/PostForge.Providers.GoogleGemini.csproj" />
+    <Project Path="src/PostForge.Providers.Instagram/PostForge.Providers.Instagram.csproj" />
+    <Project Path="src/PostForge.Providers.MicrosoftFoundry/PostForge.Providers.MicrosoftFoundry.csproj" />
+    <Project Path="src/PostForge.Providers.OpenAI/PostForge.Providers.OpenAI.csproj" />
+    <Project Path="src/PostForge.Providers.StableDiffusion/PostForge.Providers.StableDiffusion.csproj" />
+    <Project Path="src/PostForge.Providers.TikTok/PostForge.Providers.TikTok.csproj" />
+    <Project Path="src/PostForge.Providers.YouTube/PostForge.Providers.YouTube.csproj" />
     <Project Path="src/PostForge.Worker/PostForge.Worker.csproj" />
   </Folder>
   <Folder Name="/tests/">

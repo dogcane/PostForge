@@ -25,7 +25,7 @@ public class PostsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<List<PostDto>>> GetAll(
         [FromQuery] PostStatus? status,
-        [FromQuery] SocialPlatform? platform,
+        [FromQuery] string? platform,
         [FromQuery] DateTime? dateFrom,
         [FromQuery] DateTime? dateTo)
     {

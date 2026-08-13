@@ -8,9 +8,10 @@ Clean Architecture a 4 livelli con CQRS, provider model e DDD tattico.
 
 ```
 src/
-├── PostForge.Domain/          Entità, Value Object, Eventi di dominio, interfacce repository
+├── PostForge.Domain/          Entità, Value Object, interfacce provider + contract (Domain.Providers)
 ├── PostForge.Application/     CQRS handlers, validators, query/command records
-├── PostForge.Infrastructure/  Persistenza (ECO/EF Core), provider social/AI, messaggistica
+├── PostForge.Infrastructure/  Persistenza (ECO/EF Core), registry provider, messaggistica
+├── PostForge.Providers.<Nome>/ Un progetto per ogni provider (Facebook, Instagram, TikTok, YouTube, OpenAI, Anthropic, GoogleGemini, MicrosoftFoundry, DallE, StableDiffusion)
 ├── PostForge.Api/             ASP.NET Core Web API
 ├── PostForge.Worker/          Worker per scheduling e pubblicazione (Quartz.NET)
 └── web/                       Angular SPA
@@ -59,11 +60,12 @@ azd up
 
 ## Provider model
 
-Aggiungere una nuova piattaforma social o un provider AI richiede solo una nuova classe che implementi l'interfaccia — zero modifiche al dominio.
+Aggiungere una nuova piattaforma social o un provider AI richiede un nuovo progetto `PostForge.Providers.<Nome>` che implementa l'interfaccia dal dominio — zero modifiche a Domain/Application.
 
-- `ISocialPlatformProvider` → nuova piattaforma social
+- `ISocialPlatformProvider` → nuova piattaforma social (identificata dalla stringa `Identifier`, es. `FACEBOOK`)
 - `IAiTextProvider` / `IAiImageProvider` → nuovo provider AI
 - `IProviderRegistry<TProvider>` → registry per risolvere a runtime
+- Interfacce e contract vivono in `PostForge.Domain.Providers`
 
 ## Roadmap
 

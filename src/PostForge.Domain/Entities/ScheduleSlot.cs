@@ -9,16 +9,19 @@ public class ScheduleSlot : AggregateRoot<Guid>
 {
     public Guid Id => Identity;
     public Guid PostId { get; private set; }
-    public SocialPlatform Platform { get; private set; }
+    public string Platform { get; private set; }
     public DateTime ScheduledAtUtc { get; private set; }
     public PostStatus Status { get; private set; }
     public int RetryCount { get; private set; }
     public string? LastError { get; private set; }
     public DateTime? PublishedAtUtc { get; private set; }
 
-    private ScheduleSlot() : base(Guid.NewGuid()) { }
+    private ScheduleSlot() : base(Guid.NewGuid())
+    {
+        Platform = null!;
+    }
 
-    private ScheduleSlot(Guid postId, SocialPlatform platform, DateTime scheduledAtUtc) : base(Guid.NewGuid())
+    private ScheduleSlot(Guid postId, string platform, DateTime scheduledAtUtc) : base(Guid.NewGuid())
     {
         PostId = postId;
         Platform = platform;
@@ -27,12 +30,12 @@ public class ScheduleSlot : AggregateRoot<Guid>
         RetryCount = 0;
     }
 
-    public static OperationResult<ScheduleSlot> Create(Guid postId, SocialPlatform platform, DateTime scheduledAtUtc)
+    public static OperationResult<ScheduleSlot> Create(Guid postId, string platform, DateTime scheduledAtUtc)
     {
         var result = OperationResult.MakeSuccess();
         result
             .With(postId, "PostId").Condition(v => v != Guid.Empty)
-            .With(platform, "Platform").Condition(v => Enum.IsDefined(typeof(SocialPlatform), v))
+            .With(platform, "Platform").Required().StringLength(50)
             .With(scheduledAtUtc, "ScheduledAt").Condition(v => v != default)
             .With(scheduledAtUtc, "ScheduledAt").Condition(v => v.Kind == DateTimeKind.Utc);
         if (!result.Success)

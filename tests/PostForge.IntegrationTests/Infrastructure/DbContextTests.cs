@@ -112,14 +112,33 @@ public class DbContextTests
         await context.Database.EnsureCreatedAsync();
 
         var post = Post.Create("Multi-platform post").Value!;
-        post.ScheduleForPlatform(SocialPlatform.Facebook);
-        post.ScheduleForPlatform(SocialPlatform.Instagram);
+        post.ScheduleForPlatform("FACEBOOK");
+        post.ScheduleForPlatform("INSTAGRAM");
         context.Posts.Add(post);
         await context.SaveChangesAsync();
 
         var retrieved = await context.Posts.FindAsync(post.Id);
         retrieved!.TargetPlatforms.Should().HaveCount(2);
-        retrieved.TargetPlatforms.Should().Contain([SocialPlatform.Facebook, SocialPlatform.Instagram]);
+        retrieved.TargetPlatforms.Should().Contain(["FACEBOOK", "INSTAGRAM"]);
+    }
+
+    [Fact]
+    public async Task Post_CanHaveTags()
+    {
+        using var context = CreateDbContext();
+        await context.Database.EnsureCreatedAsync();
+
+        var post = Post.Create("Post with tags").Value!;
+        post.ScheduleForPlatform("FACEBOOK");
+        post.AddTag(PostTag.Create("FACEBOOK", PostTagType.Mention, "marco.rossi").Value!);
+        post.AddTag(PostTag.Create("FACEBOOK", PostTagType.Collaborator, "silvia.neri").Value!);
+        context.Posts.Add(post);
+        await context.SaveChangesAsync();
+
+        var retrieved = await context.Posts.FindAsync(post.Id);
+        retrieved!.Tags.Should().HaveCount(2);
+        retrieved.Tags.Should().Contain(t =>
+            t.Platform == "FACEBOOK" && t.TagType == PostTagType.Collaborator && t.Username == "silvia.neri");
     }
 
     [Fact]
@@ -132,14 +151,14 @@ public class DbContextTests
         context.Posts.Add(post);
         await context.SaveChangesAsync();
 
-        var slot = ScheduleSlot.Create(post.Id, SocialPlatform.TikTok, DateTime.UtcNow.AddDays(7)).Value!;
+        var slot = ScheduleSlot.Create(post.Id, "TIKTOK", DateTime.UtcNow.AddDays(7)).Value!;
         context.ScheduleSlots.Add(slot);
         await context.SaveChangesAsync();
 
         var retrieved = await context.ScheduleSlots.FindAsync(slot.Id);
         retrieved.Should().NotBeNull();
         retrieved!.PostId.Should().Be(post.Id);
-        retrieved.Platform.Should().Be(SocialPlatform.TikTok);
+        retrieved.Platform.Should().Be("TIKTOK");
         retrieved.Status.Should().Be(PostStatus.Scheduled);
     }
 
@@ -180,13 +199,13 @@ public class DbContextTests
         using var context = CreateDbContext();
         await context.Database.EnsureCreatedAsync();
 
-        var account = SocialAccount.Create(SocialPlatform.Facebook, "My Page", "encrypted_oauth_token").Value!;
+        var account = SocialAccount.Create("FACEBOOK", "My Page", "encrypted_oauth_token").Value!;
         context.SocialAccounts.Add(account);
         await context.SaveChangesAsync();
 
         var retrieved = await context.SocialAccounts.FindAsync(account.Id);
         retrieved.Should().NotBeNull();
-        retrieved!.Platform.Should().Be(SocialPlatform.Facebook);
+        retrieved!.Platform.Should().Be("FACEBOOK");
         retrieved.DisplayName.Should().Be("My Page");
     }
 

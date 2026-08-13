@@ -12,7 +12,7 @@ public class ScheduleSlotTests
     [Fact]
     public void CreatingSlot_ShouldHaveStatusScheduled()
     {
-        var result = ScheduleSlot.Create(_postId, SocialPlatform.Facebook, _futureDate);
+        var result = ScheduleSlot.Create(_postId, "FACEBOOK", _futureDate);
 
         result.Success.Should().BeTrue();
         result.Value!.Status.Should().Be(PostStatus.Scheduled);
@@ -21,7 +21,7 @@ public class ScheduleSlotTests
     [Fact]
     public void CreatingSlot_ShouldHaveRetryCountZero()
     {
-        var result = ScheduleSlot.Create(_postId, SocialPlatform.Facebook, _futureDate);
+        var result = ScheduleSlot.Create(_postId, "FACEBOOK", _futureDate);
 
         result.Value!.RetryCount.Should().Be(0);
     }
@@ -29,7 +29,7 @@ public class ScheduleSlotTests
     [Fact]
     public void CreatingSlot_WithEmptyPostId_ShouldReturnFailure()
     {
-        var result = ScheduleSlot.Create(Guid.Empty, SocialPlatform.Facebook, _futureDate);
+        var result = ScheduleSlot.Create(Guid.Empty, "FACEBOOK", _futureDate);
 
         result.Success.Should().BeFalse();
         result.Errors.Should().Contain(e => e.Context == "PostId");
@@ -38,7 +38,7 @@ public class ScheduleSlotTests
     [Fact]
     public void CreatingSlot_WithNonUtcDate_ShouldReturnFailure()
     {
-        var result = ScheduleSlot.Create(_postId, SocialPlatform.Facebook, DateTime.Now);
+        var result = ScheduleSlot.Create(_postId, "FACEBOOK", DateTime.Now);
 
         result.Success.Should().BeFalse();
         result.Errors.Should().Contain(e => e.Context == "ScheduledAt");
@@ -47,7 +47,7 @@ public class ScheduleSlotTests
     [Fact]
     public void MarkPublished_ShouldSetStatusToPublished()
     {
-        var slot = ScheduleSlot.Create(_postId, SocialPlatform.Facebook, _futureDate).Value!;
+        var slot = ScheduleSlot.Create(_postId, "FACEBOOK", _futureDate).Value!;
 
         var result = slot.MarkPublished();
 
@@ -58,7 +58,7 @@ public class ScheduleSlotTests
     [Fact]
     public void MarkPublished_WhenAlreadyPublished_ShouldReturnFailure()
     {
-        var slot = ScheduleSlot.Create(_postId, SocialPlatform.Facebook, _futureDate).Value!;
+        var slot = ScheduleSlot.Create(_postId, "FACEBOOK", _futureDate).Value!;
         slot.MarkPublished();
 
         var result = slot.MarkPublished();
@@ -69,7 +69,7 @@ public class ScheduleSlotTests
     [Fact]
     public void MarkFailed_ShouldSetStatusToFailedAndIncrementRetryCount()
     {
-        var slot = ScheduleSlot.Create(_postId, SocialPlatform.Facebook, _futureDate).Value!;
+        var slot = ScheduleSlot.Create(_postId, "FACEBOOK", _futureDate).Value!;
 
         var result = slot.MarkFailed("Network error");
 
@@ -82,7 +82,7 @@ public class ScheduleSlotTests
     [Fact]
     public void CanRetry_ShouldReturnTrueWhenRetryCountIsZero()
     {
-        var slot = ScheduleSlot.Create(_postId, SocialPlatform.Facebook, _futureDate).Value!;
+        var slot = ScheduleSlot.Create(_postId, "FACEBOOK", _futureDate).Value!;
 
         slot.CanRetry.Should().BeTrue();
     }
@@ -90,7 +90,7 @@ public class ScheduleSlotTests
     [Fact]
     public void CanRetry_ShouldReturnTrueAfterOneRetry()
     {
-        var slot = ScheduleSlot.Create(_postId, SocialPlatform.Facebook, _futureDate).Value!;
+        var slot = ScheduleSlot.Create(_postId, "FACEBOOK", _futureDate).Value!;
         slot.MarkFailed();
 
         slot.CanRetry.Should().BeTrue();
@@ -99,7 +99,7 @@ public class ScheduleSlotTests
     [Fact]
     public void CanRetry_ShouldReturnTrueAfterTwoRetries()
     {
-        var slot = ScheduleSlot.Create(_postId, SocialPlatform.Facebook, _futureDate).Value!;
+        var slot = ScheduleSlot.Create(_postId, "FACEBOOK", _futureDate).Value!;
         slot.MarkFailed();
         slot.MarkFailed();
 
@@ -109,7 +109,7 @@ public class ScheduleSlotTests
     [Fact]
     public void CanRetry_ShouldReturnFalseAfterThreeRetries()
     {
-        var slot = ScheduleSlot.Create(_postId, SocialPlatform.Facebook, _futureDate).Value!;
+        var slot = ScheduleSlot.Create(_postId, "FACEBOOK", _futureDate).Value!;
         slot.MarkFailed();
         slot.MarkFailed();
         slot.MarkFailed();
@@ -120,7 +120,7 @@ public class ScheduleSlotTests
     [Fact]
     public void MarkFailedWithoutError_ShouldSetLastErrorToNull()
     {
-        var slot = ScheduleSlot.Create(_postId, SocialPlatform.Facebook, _futureDate).Value!;
+        var slot = ScheduleSlot.Create(_postId, "FACEBOOK", _futureDate).Value!;
 
         slot.MarkFailed();
 

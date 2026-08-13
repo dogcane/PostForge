@@ -8,7 +8,7 @@ PostForge è in **Fase 0 completata**. Soluzione .NET 10 con Clean Architecture,
 
 - **Clean Architecture** a 4 livelli: Domain → Application → Infrastructure → API/Worker.
 - **CQRS con Mediator** (`Mediator.SourceGenerator` di martinothamar — source generator, `ValueTask<T>`, Singleton/Scoped lifetime).
-- **Provider model** duale: `ISocialPlatformProvider` per piattaforme social, `IAiTextProvider`/`IAiImageProvider` per AI.
+- **Provider model** duale: `ISocialPlatformProvider` per piattaforme social, `IAiTextProvider`/`IAiImageProvider` per AI. Le interfacce e i contract vivono nel layer **Domain** (`PostForge.Domain.Providers`); ogni provider è un progetto separato `PostForge.Providers.<Nome>`. Le piattaforme sono identificate dalla stringa `Identifier` del provider (es. `FACEBOOK`), **non** da un enum: aggiungere una piattaforma non tocca il dominio.
 - **DDD tattico**: Entity, ValueObject nel layer Domain. Domain events NON nel dominio: verranno modellati a livello Application.
 - **Resilienza con Polly** (retry, circuit breaker, rate limiter) su ogni provider esterno.
 - **Persistenza con ECO**: le entità ereditano da `AggregateRoot<Guid>` / `Entity<Guid>` di ECO; repository implementano `EntityFrameworkRepository<T, Guid>`; `IDataContext` come unit of work.
@@ -46,15 +46,16 @@ PostForge è in **Fase 0 completata**. Soluzione .NET 10 con Clean Architecture,
 | Test | xUnit, FluentAssertions, Testcontainers, WireMock.NET, ECO.Providers.InMemory |
 | IaC | Bicep + `azd` |
 
-## Struttura soluzione (da creare)
+## Struttura soluzione
 
 ```
-PostForge.sln
+PostForge.slnx
 src/
-  PostForge.Domain/        Entities/, ValueObjects/, Events/
+  PostForge.Domain/        Entities/, ValueObjects/, Providers/ (interfacce + contracts)
   PostForge.Application/   Posts/, Campaigns/, Scheduling/, Ai/
-  PostForge.Infrastructure/ Providers.Social/, Providers.Ai/, Messaging/
+  PostForge.Infrastructure/ Messaging/, Resilience/, registries provider
   PostForge.Infrastructure.DAL/  Persistence (PostForgeDbContext + repository implementations)
+  PostForge.Providers.<Nome>/    un progetto per ogni provider (Facebook, Instagram, TikTok, YouTube, OpenAI, Anthropic, GoogleGemini, MicrosoftFoundry, DallE, StableDiffusion)
   PostForge.Api/
   PostForge.Worker/
 web/                       Angular SPA
@@ -78,7 +79,7 @@ infra/
 
 ## Convenzioni
 
-- Provider model: nuova piattaforma/AI provider = nuova classe che implementa l'interfaccia, zero modifiche al dominio.
+- Provider model: nuova piattaforma/AI provider = nuovo progetto `PostForge.Providers.<Nome>` che implementa l'interfaccia dal Domain (con il proprio extension method DI), zero modifiche a Domain/Application. Piattaforme identificate da `ISocialPlatformProvider.Identifier`.
 - Ogni provider esterno ha rate limit e SLA propri → Polly per retry, circuit breaker, timeout dedicati.
 - Token OAuth e chiavi AI mai in chiaro → Key Vault + Managed Identity.
 - Provider esterni mockabili nei test (WireMock.NET).
@@ -144,7 +145,7 @@ public static OperationResult<Post> Create(string text, Guid? campaignId = null)
 Per validazioni custom (es. `Enum.IsDefined`, `DateTime.Kind`, date ordering) usare `.Condition()`:
 
 ```csharp
-result.With(platform, "Platform").Condition(v => Enum.IsDefined(typeof(SocialPlatform), v));
+result.With(status, "Status").Condition(v => Enum.IsDefined(typeof(PostStatus), v));
 result.With(scheduledAtUtc, "ScheduledAt").Condition(v => v.Kind == DateTimeKind.Utc);
 ```
 

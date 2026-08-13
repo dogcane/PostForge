@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { Post, PostStatus } from '../../../models/post.model';
+import { Post, PostStatus, PostTag, PostTagType } from '../../../models/post.model';
 
 @Component({
   selector: 'app-post-list',
@@ -39,6 +39,12 @@ import { Post, PostStatus } from '../../../models/post.model';
                 {{ platformLabel(p) }}
               </span>
             </div>
+            <div class="post-card__tags" *ngIf="post.tags.length">
+              <span class="pf-tag" *ngFor="let tag of post.tags">
+                <mat-icon>{{ tagIcon(tag.tagType) }}</mat-icon>
+                @{{ tag.username }} · {{ tagLabel(tag.tagType) }}
+              </span>
+            </div>
           </article>
         </div>
       </ng-container>
@@ -64,6 +70,10 @@ export class PostListComponent {
       text: 'The future of content is not just created — it is forged. Discover how PostForge turns a single idea into a cross-platform launch. #PostForge',
       mediaAssets: [],
       targetPlatforms: ['facebook', 'instagram'],
+      tags: [
+        { platform: 'facebook', tagType: PostTagType.Collaborator, username: 'silvia.neri' },
+        { platform: 'instagram', tagType: PostTagType.Mention, username: 'marco.rossi' }
+      ],
       status: PostStatus.Scheduled,
       createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
       updatedAt: new Date().toISOString()
@@ -73,6 +83,7 @@ export class PostListComponent {
       text: 'We just shipped AI caption generation. Describe the vibe, pick the tone, and let the machine do the heavy lifting for your next campaign.',
       mediaAssets: [],
       targetPlatforms: ['youtube', 'tiktok'],
+      tags: [],
       status: PostStatus.Published,
       createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
       updatedAt: new Date().toISOString()
@@ -82,6 +93,7 @@ export class PostListComponent {
       text: 'Campaign planning just got a lot easier. Group posts under a goal, set your channels, and keep the whole team aligned on one calendar.',
       mediaAssets: [],
       targetPlatforms: ['facebook'],
+      tags: [],
       status: PostStatus.Draft,
       createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
       updatedAt: new Date().toISOString()
@@ -109,6 +121,24 @@ export class PostListComponent {
       case 'tiktok': return 'TikTok';
       case 'youtube': return 'YouTube';
       default: return platform;
+    }
+  }
+
+  tagIcon(tagType: PostTagType): string {
+    switch (tagType) {
+      case PostTagType.Mention: return 'alternate_email';
+      case PostTagType.UserTag: return 'person_pin';
+      case PostTagType.Collaborator: return 'group';
+      default: return 'person';
+    }
+  }
+
+  tagLabel(tagType: PostTagType): string {
+    switch (tagType) {
+      case PostTagType.Mention: return 'Mention';
+      case PostTagType.UserTag: return 'Tag on photo';
+      case PostTagType.Collaborator: return 'Collaborator';
+      default: return tagType;
     }
   }
 }

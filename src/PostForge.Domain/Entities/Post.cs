@@ -8,12 +8,14 @@ namespace PostForge.Domain.Entities;
 public class Post : AggregateRoot<Guid>
 {
     private readonly List<MediaAsset> _mediaAssetsField = [];
-    private readonly List<SocialPlatform> _targetPlatformsField = [];
+    private readonly List<string> _targetPlatformsField = [];
+    private readonly List<PostTag> _tags = [];
 
     public Guid Id => Identity;
     public string Text { get; private set; }
     public IReadOnlyList<MediaAsset> MediaAssets => _mediaAssetsField.AsReadOnly();
-    public IReadOnlyList<SocialPlatform> TargetPlatforms => _targetPlatformsField.AsReadOnly();
+    public IReadOnlyList<string> TargetPlatforms => _targetPlatformsField.AsReadOnly();
+    public IReadOnlyList<PostTag> Tags => _tags.AsReadOnly();
     public Guid? CampaignId { get; private set; }
     public PostStatus Status { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
@@ -88,17 +90,70 @@ public class Post : AggregateRoot<Guid>
         return OperationResult.MakeSuccess();
     }
 
-    public OperationResult ScheduleForPlatform(SocialPlatform platform)
+    public OperationResult ScheduleForPlatform(string platformIdentifier)
     {
         var result = OperationResult.MakeSuccess();
-        result.With(platform, "Platform").Condition(v => Enum.IsDefined(typeof(SocialPlatform), v));
+        result.With(platformIdentifier, "Platform").Required().StringLength(50);
         if (!result.Success)
             return result;
-        if (!_targetPlatformsField.Contains(platform))
+        if (!_targetPlatformsField.Contains(platformIdentifier))
         {
-            _targetPlatformsField.Add(platform);
+            _targetPlatformsField.Add(platformIdentifier);
             UpdatedAtUtc = DateTime.UtcNow;
         }
+        return OperationResult.MakeSuccess();
+    }
+
+    public OperationResult AddTag(PostTag tag)
+    {
+        var result = OperationResult.MakeSuccess();
+        result.With(tag, "Tag").Required();
+        if (!result.Success)
+            return result;
+        if (!_targetPlatformsField.Contains(tag.Platform))
+            return OperationResult.MakeFailure(
+                ErrorMessage.Create("Platform", $"Cannot tag a user on platform '{tag.Platform}': the post is not targeted at it."));
+        if (_tags.Contains(tag))
+            return OperationResult.MakeFailure(
+                ErrorMessage.Create("Tag", $"Tag '{tag.Username}' of type {tag.TagType} already exists for platform '{tag.Platform}'."));
+        _tags.Add(tag);
+        UpdatedAtUtc = DateTime.UtcNow;
+        return OperationResult.MakeSuccess();
+    }
+
+    public OperationResult SetTags(IReadOnlyList<PostTag> tags)
+    {
+        var result = OperationResult.MakeSuccess();
+        result.With(tags, "Tags").Required();
+        if (!result.Success)
+            return result;
+        foreach (var tag in tags)
+        {
+            result.With(tag, "Tag").Required();
+            if (!result.Success)
+                return result;
+            if (!_targetPlatformsField.Contains(tag.Platform))
+                return OperationResult.MakeFailure(
+                    ErrorMessage.Create("Platform", $"Cannot tag a user on platform '{tag.Platform}': the post is not targeted at it."));
+            if (tags.Count(t => t.Equals(tag)) > 1)
+                return OperationResult.MakeFailure(
+                    ErrorMessage.Create("Tag", $"Duplicate tag '{tag.Username}' of type {tag.TagType} for platform '{tag.Platform}'."));
+        }
+        _tags.Clear();
+        _tags.AddRange(tags);
+        UpdatedAtUtc = DateTime.UtcNow;
+        return OperationResult.MakeSuccess();
+    }
+
+    public OperationResult RemoveTag(PostTag tag)
+    {
+        var result = OperationResult.MakeSuccess();
+        result.With(tag, "Tag").Required();
+        if (!result.Success)
+            return result;
+        if (!_tags.Remove(tag))
+            return OperationResult.MakeFailure(ErrorMessage.Create("Tag", "Tag not found in the post."));
+        UpdatedAtUtc = DateTime.UtcNow;
         return OperationResult.MakeSuccess();
     }
 }

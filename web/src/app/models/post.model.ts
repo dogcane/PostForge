@@ -12,6 +12,7 @@ export interface Post {
   text: string;
   mediaAssets: MediaAsset[];
   targetPlatforms: string[];
+  tags: PostTag[];
   campaignId?: string;
   status: PostStatus;
   createdAt: string;
@@ -26,10 +27,23 @@ export interface MediaAsset {
   sourcePrompt?: string;
 }
 
+export enum PostTagType {
+  Mention = 'Mention',
+  UserTag = 'UserTag',
+  Collaborator = 'Collaborator'
+}
+
+export interface PostTag {
+  platform: string;
+  tagType: PostTagType;
+  username: string;
+}
+
 export interface PostContent {
   text: string;
   mediaIds: string[];
   platformKeys: string[];
   campaignId?: string;
+  tags?: PostTag[];
   scheduledAt?: string;
 }

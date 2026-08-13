@@ -1,10 +1,11 @@
 using Mediator;
-using PostForge.Domain.ValueObjects;
+using PostForge.Application.Posts.DTOs;
 
 namespace PostForge.Application.Posts.Commands.CreatePost;
 
 public record CreatePostCommand(
     string Text,
     List<Guid>? MediaAssetIds,
-    List<SocialPlatform>? TargetPlatforms,
-    Guid? CampaignId) : IRequest<Guid>;
+    List<string>? TargetPlatforms,
+    Guid? CampaignId,
+    List<PostTagDto>? Tags = null) : IRequest<Guid>;

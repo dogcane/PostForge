@@ -106,10 +106,10 @@ public class PostTests
     {
         var post = Post.Create("Test content").Value!;
 
-        var result = post.ScheduleForPlatform(SocialPlatform.Facebook);
+        var result = post.ScheduleForPlatform("FACEBOOK");
 
         result.Success.Should().BeTrue();
-        post.TargetPlatforms.Should().Contain(SocialPlatform.Facebook);
+        post.TargetPlatforms.Should().Contain("FACEBOOK");
     }
 
     [Fact]
@@ -117,8 +117,8 @@ public class PostTests
     {
         var post = Post.Create("Test content").Value!;
 
-        post.ScheduleForPlatform(SocialPlatform.Facebook);
-        post.ScheduleForPlatform(SocialPlatform.Facebook);
+        post.ScheduleForPlatform("FACEBOOK");
+        post.ScheduleForPlatform("FACEBOOK");
 
         post.TargetPlatforms.Should().HaveCount(1);
     }
@@ -144,5 +144,132 @@ public class PostTests
 
         result.Success.Should().BeFalse();
         result.Errors.Should().Contain(e => e.Context == "Text");
+    }
+
+    [Fact]
+    public void AddTag_ShouldAddTagWhenPlatformIsTargeted()
+    {
+        var post = Post.Create("Test content").Value!;
+        post.ScheduleForPlatform("FACEBOOK");
+        var tag = PostTag.Create("FACEBOOK", PostTagType.Mention, "marco.rossi").Value!;
+
+        var result = post.AddTag(tag);
+
+        result.Success.Should().BeTrue();
+        post.Tags.Should().ContainSingle().Which.Should().Be(tag);
+    }
+
+    [Fact]
+    public void AddTag_OnUntargetedPlatform_ShouldReturnFailure()
+    {
+        var post = Post.Create("Test content").Value!;
+        post.ScheduleForPlatform("INSTAGRAM");
+        var tag = PostTag.Create("FACEBOOK", PostTagType.Collaborator, "marco.rossi").Value!;
+
+        var result = post.AddTag(tag);
+
+        result.Success.Should().BeFalse();
+        result.Errors.Should().Contain(e => e.Context == "Platform");
+    }
+
+    [Fact]
+    public void AddTag_Duplicate_ShouldReturnFailure()
+    {
+        var post = Post.Create("Test content").Value!;
+        post.ScheduleForPlatform("FACEBOOK");
+        var tag = PostTag.Create("FACEBOOK", PostTagType.UserTag, "marco.rossi").Value!;
+        post.AddTag(tag);
+
+        var result = post.AddTag(tag);
+
+        result.Success.Should().BeFalse();
+        result.Errors.Should().Contain(e => e.Context == "Tag");
+    }
+
+    [Fact]
+    public void AddTag_WithNull_ShouldReturnFailure()
+    {
+        var post = Post.Create("Test content").Value!;
+        post.ScheduleForPlatform("FACEBOOK");
+
+        var result = post.AddTag(null!);
+
+        result.Success.Should().BeFalse();
+        result.Errors.Should().Contain(e => e.Context == "Tag");
+    }
+
+    [Fact]
+    public void SetTags_ShouldReplaceExistingTags()
+    {
+        var post = Post.Create("Test content").Value!;
+        post.ScheduleForPlatform("FACEBOOK");
+        var original = PostTag.Create("FACEBOOK", PostTagType.Mention, "annamaria.bianchi").Value!;
+        post.AddTag(original);
+
+        var replaced = new[]
+        {
+            PostTag.Create("FACEBOOK", PostTagType.Mention, "carlo.verdi").Value!,
+            PostTag.Create("FACEBOOK", PostTagType.Collaborator, "silvia.neri").Value!
+        };
+
+        var result = post.SetTags(replaced);
+
+        result.Success.Should().BeTrue();
+        post.Tags.Should().HaveCount(2);
+        post.Tags.Should().Contain(replaced);
+        post.Tags.Should().NotContain(original);
+    }
+
+    [Fact]
+    public void SetTags_WithDuplicate_ShouldReturnFailure()
+    {
+        var post = Post.Create("Test content").Value!;
+        post.ScheduleForPlatform("FACEBOOK");
+        var tag = PostTag.Create("FACEBOOK", PostTagType.Mention, "marco.rossi").Value!;
+
+        var result = post.SetTags([tag, tag]);
+
+        result.Success.Should().BeFalse();
+        result.Errors.Should().Contain(e => e.Context == "Tag");
+    }
+
+    [Fact]
+    public void SetTags_WithPlatformNotTargeted_ShouldReturnFailure()
+    {
+        var post = Post.Create("Test content").Value!;
+        post.ScheduleForPlatform("FACEBOOK");
+        var tags = new[] { PostTag.Create("INSTAGRAM", PostTagType.Collaborator, "carlo.verdi").Value! };
+
+        var result = post.SetTags(tags);
+
+        result.Success.Should().BeFalse();
+        result.Errors.Should().Contain(e => e.Context == "Platform");
+    }
+
+    [Fact]
+    public void RemoveTag_ShouldRemoveTagFromCollection()
+    {
+        var post = Post.Create("Test content").Value!;
+        post.ScheduleForPlatform("FACEBOOK");
+        var tag = PostTag.Create("FACEBOOK", PostTagType.Mention, "marco.rossi").Value!;
+        post.AddTag(tag);
+
+        var result = post.RemoveTag(tag);
+
+        result.Success.Should().BeTrue();
+        post.Tags.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void RemoveTag_WhenTagNotInCollection_ShouldReturnFailure()
+    {
+        var post = Post.Create("Test content").Value!;
+        post.ScheduleForPlatform("FACEBOOK");
+        var tag = PostTag.Create("FACEBOOK", PostTagType.Mention, "marco.rossi").Value!;
+
+        var result = post.RemoveTag(tag);
+
+        result.Success.Should().BeFalse();
+        result.Errors.Should().Contain(e => e.Context == "Tag");
     }
 }

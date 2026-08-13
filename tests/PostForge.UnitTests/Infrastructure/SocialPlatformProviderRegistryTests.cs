@@ -1,7 +1,10 @@
 using FluentAssertions;
-using PostForge.Domain.ValueObjects;
-using PostForge.Infrastructure;
+using PostForge.Domain.Providers;
 using PostForge.Infrastructure.Providers.Social;
+using PostForge.Providers.Facebook;
+using PostForge.Providers.Instagram;
+using PostForge.Providers.TikTok;
+using PostForge.Providers.YouTube;
 
 namespace PostForge.UnitTests.Infrastructure;
 
@@ -23,15 +26,14 @@ public class SocialPlatformProviderRegistryTests
     }
 
     [Theory]
-    [InlineData(SocialPlatform.Facebook, "FACEBOOK")]
-    [InlineData(SocialPlatform.Instagram, "INSTAGRAM")]
-    [InlineData(SocialPlatform.TikTok, "TIKTOK")]
-    [InlineData(SocialPlatform.YouTube, "YOUTUBE")]
-    public void ResolveByPlatform_ShouldReturnMatchingProvider(SocialPlatform platform, string identifier)
+    [InlineData("FACEBOOK")]
+    [InlineData("INSTAGRAM")]
+    [InlineData("TIKTOK")]
+    [InlineData("YOUTUBE")]
+    public void ResolveByIdentifier_ShouldReturnMatchingProvider(string identifier)
     {
-        var provider = _sut.Resolve(platform);
+        var provider = _sut.Resolve(identifier);
 
-        provider.Platform.Should().Be(platform);
         provider.Identifier.Should().Be(identifier);
     }
 
@@ -45,14 +47,6 @@ public class SocialPlatformProviderRegistryTests
         var provider = _sut.Resolve(identifier);
 
         provider.Identifier.Should().Be(identifier.ToUpperInvariant());
-    }
-
-    [Fact]
-    public void ResolveUnknownPlatform_ShouldThrowKeyNotFound()
-    {
-        var act = () => _sut.Resolve((SocialPlatform)99);
-
-        act.Should().Throw<KeyNotFoundException>();
     }
 
     [Fact]

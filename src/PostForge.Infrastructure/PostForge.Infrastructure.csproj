@@ -3,6 +3,16 @@
   <ItemGroup>
     <ProjectReference Include="..\PostForge.Application\PostForge.Application.csproj" />
     <ProjectReference Include="..\PostForge.Infrastructure.DAL\PostForge.Infrastructure.DAL.csproj" />
+    <ProjectReference Include="..\PostForge.Providers.Anthropic\PostForge.Providers.Anthropic.csproj" />
+    <ProjectReference Include="..\PostForge.Providers.DallE\PostForge.Providers.DallE.csproj" />
+    <ProjectReference Include="..\PostForge.Providers.Facebook\PostForge.Providers.Facebook.csproj" />
+    <ProjectReference Include="..\PostForge.Providers.GoogleGemini\PostForge.Providers.GoogleGemini.csproj" />
+    <ProjectReference Include="..\PostForge.Providers.Instagram\PostForge.Providers.Instagram.csproj" />
+    <ProjectReference Include="..\PostForge.Providers.MicrosoftFoundry\PostForge.Providers.MicrosoftFoundry.csproj" />
+    <ProjectReference Include="..\PostForge.Providers.OpenAI\PostForge.Providers.OpenAI.csproj" />
+    <ProjectReference Include="..\PostForge.Providers.StableDiffusion\PostForge.Providers.StableDiffusion.csproj" />
+    <ProjectReference Include="..\PostForge.Providers.TikTok\PostForge.Providers.TikTok.csproj" />
+    <ProjectReference Include="..\PostForge.Providers.YouTube\PostForge.Providers.YouTube.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -82,7 +82,7 @@ public class PostsControllerTests : IAsyncLifetime
         var command = new CreatePostCommand(
             "New integration test post",
             null,
-            new List<SocialPlatform> { SocialPlatform.Facebook },
+            new List<string> { "FACEBOOK" },
             null);
 
         var response = await _client.PostAsJsonAsync("/api/v1/posts", command);
@@ -130,5 +130,31 @@ public class PostsControllerTests : IAsyncLifetime
         var response = await _client.PostAsJsonAsync("/api/v1/posts", command);
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Create_WithTags_ShouldReturnTagsInGetById()
+    {
+        var command = new CreatePostCommand(
+            "Tagged post",
+            null,
+            new List<string> { "FACEBOOK" },
+            null,
+            new List<PostTagDto>
+            {
+                new("FACEBOOK", PostTagType.Collaborator, "silvia.neri")
+            });
+
+        var response = await _client.PostAsJsonAsync("/api/v1/posts", command);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        var postId = await response.Content.ReadFromJsonAsync<Guid>();
+
+        var getResponse = await _client.GetAsync($"/api/v1/posts/{postId}");
+        getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        var dto = await getResponse.Content.ReadFromJsonAsync<PostDto>();
+        dto.Should().NotBeNull();
+        dto!.Tags.Should().ContainSingle(t =>
+            t.Platform == "FACEBOOK" && t.TagType == PostTagType.Collaborator && t.Username == "silvia.neri");
     }
 }

@@ -18,7 +18,7 @@ public class SchedulePostCommandHandlerTests : HandlerTestBase
 
         var handler = new SchedulePostHandler(PostRepository, ScheduleSlotRepository, DataContext);
         var futureDate = DateTime.UtcNow.AddDays(1);
-        var command = new SchedulePostCommand(post.Id, SocialPlatform.Facebook, futureDate);
+        var command = new SchedulePostCommand(post.Id, "FACEBOOK", futureDate);
 
         var slotId = await handler.Handle(command, CancellationToken.None);
 
@@ -26,7 +26,7 @@ public class SchedulePostCommandHandlerTests : HandlerTestBase
         var slot = await ScheduleSlotRepository.LoadAsync(slotId);
         slot.Should().NotBeNull();
         slot!.PostId.Should().Be(post.Id);
-        slot.Platform.Should().Be(SocialPlatform.Facebook);
+        slot.Platform.Should().Be("FACEBOOK");
         slot.ScheduledAtUtc.Should().Be(futureDate);
         slot.Status.Should().Be(PostStatus.Scheduled);
 
@@ -38,7 +38,7 @@ public class SchedulePostCommandHandlerTests : HandlerTestBase
     public async Task Handle_ShouldThrowWhenPostNotFound()
     {
         var handler = new SchedulePostHandler(PostRepository, ScheduleSlotRepository, DataContext);
-        var command = new SchedulePostCommand(Guid.NewGuid(), SocialPlatform.Facebook, DateTime.UtcNow.AddDays(1));
+        var command = new SchedulePostCommand(Guid.NewGuid(), "FACEBOOK", DateTime.UtcNow.AddDays(1));
 
         var act = async () => await handler.Handle(command, CancellationToken.None);
 
@@ -54,12 +54,12 @@ public class SchedulePostCommandHandlerTests : HandlerTestBase
         await DataContext.SaveChangesAsync(CancellationToken.None);
 
         var handler = new SchedulePostHandler(PostRepository, ScheduleSlotRepository, DataContext);
-        var command = new SchedulePostCommand(post.Id, SocialPlatform.Instagram, DateTime.UtcNow.AddDays(1));
+        var command = new SchedulePostCommand(post.Id, "INSTAGRAM", DateTime.UtcNow.AddDays(1));
 
         await handler.Handle(command, CancellationToken.None);
 
         var updatedPost = await PostRepository.LoadAsync(post.Id);
-        updatedPost!.TargetPlatforms.Should().Contain(SocialPlatform.Instagram);
+        updatedPost!.TargetPlatforms.Should().Contain("INSTAGRAM");
     }
 }
 
@@ -70,7 +70,7 @@ public class SchedulePostValidatorTests
     [Fact]
     public void Validator_ShouldRejectEmptyPostId()
     {
-        var command = new SchedulePostCommand(Guid.Empty, SocialPlatform.Facebook, DateTime.UtcNow.AddDays(1));
+        var command = new SchedulePostCommand(Guid.Empty, "FACEBOOK", DateTime.UtcNow.AddDays(1));
 
         var result = _validator.Validate(command);
 
@@ -79,9 +79,9 @@ public class SchedulePostValidatorTests
     }
 
     [Fact]
-    public void Validator_ShouldRejectInvalidPlatform()
+    public void Validator_ShouldRejectEmptyPlatform()
     {
-        var command = new SchedulePostCommand(Guid.NewGuid(), (SocialPlatform)99, DateTime.UtcNow.AddDays(1));
+        var command = new SchedulePostCommand(Guid.NewGuid(), "", DateTime.UtcNow.AddDays(1));
 
         var result = _validator.Validate(command);
 
@@ -92,7 +92,7 @@ public class SchedulePostValidatorTests
     [Fact]
     public void Validator_ShouldRejectPastDates()
     {
-        var command = new SchedulePostCommand(Guid.NewGuid(), SocialPlatform.Facebook, DateTime.UtcNow.AddDays(-1));
+        var command = new SchedulePostCommand(Guid.NewGuid(), "FACEBOOK", DateTime.UtcNow.AddDays(-1));
 
         var result = _validator.Validate(command);
 
@@ -103,7 +103,7 @@ public class SchedulePostValidatorTests
     [Fact]
     public void Validator_ShouldAcceptValidCommand()
     {
-        var command = new SchedulePostCommand(Guid.NewGuid(), SocialPlatform.Facebook, DateTime.UtcNow.AddDays(1));
+        var command = new SchedulePostCommand(Guid.NewGuid(), "FACEBOOK", DateTime.UtcNow.AddDays(1));
 
         var result = _validator.Validate(command);
 

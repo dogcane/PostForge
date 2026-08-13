@@ -1,10 +1,21 @@
 using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using PostForge.Domain.Providers;
 using PostForge.Infrastructure.DAL;
 using PostForge.Infrastructure.Messaging;
 using PostForge.Infrastructure.Providers.Ai;
 using PostForge.Infrastructure.Providers.Social;
+using PostForge.Providers.Anthropic;
+using PostForge.Providers.DallE;
+using PostForge.Providers.Facebook;
+using PostForge.Providers.GoogleGemini;
+using PostForge.Providers.Instagram;
+using PostForge.Providers.MicrosoftFoundry;
+using PostForge.Providers.OpenAI;
+using PostForge.Providers.StableDiffusion;
+using PostForge.Providers.TikTok;
+using PostForge.Providers.YouTube;
 
 namespace PostForge.Infrastructure;
 
@@ -16,7 +27,6 @@ public static class DependencyInjection
 
         RegisterSocialProviders(services);
         RegisterAiProviders(services);
-        RegisterHttpClients(services);
         RegisterMessaging(services);
 
         return services;
@@ -24,41 +34,26 @@ public static class DependencyInjection
 
     private static void RegisterSocialProviders(IServiceCollection services)
     {
-        services.AddScoped<ISocialPlatformProvider, FacebookProvider>();
-        services.AddScoped<ISocialPlatformProvider, InstagramProvider>();
-        services.AddScoped<ISocialPlatformProvider, TikTokProvider>();
-        services.AddScoped<ISocialPlatformProvider, YouTubeProvider>();
+        services.AddFacebookProvider();
+        services.AddInstagramProvider();
+        services.AddTikTokProvider();
+        services.AddYouTubeProvider();
 
         services.AddScoped<ISocialPlatformProviderRegistry, SocialPlatformProviderRegistry>();
     }
 
     private static void RegisterAiProviders(IServiceCollection services)
     {
-        services.AddScoped<IAiTextProvider, OpenAiTextProvider>();
-        services.AddScoped<IAiTextProvider, AnthropicTextProvider>();
-        services.AddScoped<IAiTextProvider, GoogleGeminiTextProvider>();
-        services.AddScoped<IAiTextProvider, MicrosoftFoundryTextProvider>();
+        services.AddOpenAiTextProvider();
+        services.AddAnthropicTextProvider();
+        services.AddGoogleGeminiTextProvider();
+        services.AddMicrosoftFoundryTextProvider();
 
-        services.AddScoped<IAiImageProvider, DallEImageProvider>();
-        services.AddScoped<IAiImageProvider, StableDiffusionImageProvider>();
+        services.AddDallEImageProvider();
+        services.AddStableDiffusionImageProvider();
 
         services.AddScoped<IProviderRegistry<IAiTextProvider>, AiTextProviderRegistry>();
         services.AddScoped<IProviderRegistry<IAiImageProvider>, AiImageProviderRegistry>();
-    }
-
-    private static void RegisterHttpClients(IServiceCollection services)
-    {
-        services.AddHttpClient("FacebookProvider")
-            .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://graph.facebook.com/v22.0/"));
-
-        services.AddHttpClient("InstagramProvider")
-            .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://graph.facebook.com/v22.0/"));
-
-        services.AddHttpClient("TikTokProvider")
-            .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://open-api.tiktok.com/"));
-
-        services.AddHttpClient("YouTubeProvider")
-            .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://www.googleapis.com/youtube/v3/"));
     }
 
     private static void RegisterMessaging(IServiceCollection services)

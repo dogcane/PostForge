@@ -2,6 +2,7 @@ using ECO.Data;
 using Mediator;
 using PostForge.Domain.Interfaces;
 using PostForge.Domain.Entities;
+using PostForge.Domain.ValueObjects;
 
 namespace PostForge.Application.Posts.Commands.CreatePost;
 
@@ -23,6 +24,22 @@ public class CreatePostHandler(
             foreach (var platform in request.TargetPlatforms)
             {
                 var result = post.ScheduleForPlatform(platform);
+                if (!result.Success)
+                    throw new InvalidOperationException(
+                        string.Join("; ", result.Errors.Select(e => $"{e.Context}: {e.Description}")));
+            }
+        }
+
+        if (request.Tags is not null)
+        {
+            foreach (var tagDto in request.Tags)
+            {
+                var tag = PostTag.Create(tagDto.Platform, tagDto.TagType, tagDto.Username);
+                if (!tag.Success)
+                    throw new InvalidOperationException(
+                        string.Join("; ", tag.Errors.Select(e => $"{e.Context}: {e.Description}")));
+
+                var result = post.AddTag(tag.Value!);
                 if (!result.Success)
                     throw new InvalidOperationException(
                         string.Join("; ", result.Errors.Select(e => $"{e.Context}: {e.Description}")));

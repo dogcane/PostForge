@@ -8,7 +8,7 @@ public class ScheduleSlotDto : IMapFrom<ScheduleSlot>
 {
     public Guid Id { get; set; }
     public Guid PostId { get; set; }
-    public SocialPlatform Platform { get; set; }
+    public string Platform { get; set; } = null!;
     public DateTime ScheduledAtUtc { get; set; }
     public PostStatus Status { get; set; }
     public int RetryCount { get; set; }

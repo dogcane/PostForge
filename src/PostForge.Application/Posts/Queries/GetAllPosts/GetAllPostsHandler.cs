@@ -24,8 +24,8 @@ public class GetAllPostsHandler(
 
         var posts = query.ToList();
 
-        if (request.Platform.HasValue)
-            posts = posts.Where(p => p.TargetPlatforms.Contains(request.Platform.Value)).ToList();
+        if (!string.IsNullOrWhiteSpace(request.Platform))
+            posts = posts.Where(p => p.TargetPlatforms.Contains(request.Platform)).ToList();
 
         return ValueTask.FromResult(mapper.Map<List<PostDto>>(posts));
     }

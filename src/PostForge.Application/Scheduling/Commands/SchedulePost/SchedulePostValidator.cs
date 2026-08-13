@@ -10,7 +10,8 @@ public class SchedulePostValidator : AbstractValidator<SchedulePostCommand>
             .NotEmpty();
 
         RuleFor(v => v.Platform)
-            .IsInEnum();
+            .NotEmpty()
+            .MaximumLength(50);
 
         RuleFor(v => v.ScheduledAtUtc)
             .NotEmpty()

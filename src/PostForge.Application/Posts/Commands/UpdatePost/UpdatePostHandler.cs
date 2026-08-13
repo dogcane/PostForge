@@ -1,6 +1,7 @@
 using ECO.Data;
 using Mediator;
 using PostForge.Domain.Interfaces;
+using PostForge.Domain.ValueObjects;
 
 namespace PostForge.Application.Posts.Commands.UpdatePost;
 
@@ -41,6 +42,24 @@ public class UpdatePostHandler(
                     throw new InvalidOperationException(
                         string.Join("; ", result.Errors.Select(e => $"{e.Context}: {e.Description}")));
             }
+        }
+
+        if (request.Tags is not null)
+        {
+            var tags = new List<PostTag>(request.Tags.Count);
+            foreach (var tagDto in request.Tags)
+            {
+                var tag = PostTag.Create(tagDto.Platform, tagDto.TagType, tagDto.Username);
+                if (!tag.Success)
+                    throw new InvalidOperationException(
+                        string.Join("; ", tag.Errors.Select(e => $"{e.Context}: {e.Description}")));
+                tags.Add(tag.Value!);
+            }
+
+            var setTagsResult = post.SetTags(tags);
+            if (!setTagsResult.Success)
+                throw new InvalidOperationException(
+                    string.Join("; ", setTagsResult.Errors.Select(e => $"{e.Context}: {e.Description}")));
         }
 
         postRepository.Update(post);

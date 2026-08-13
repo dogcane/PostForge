@@ -1,6 +1,7 @@
 using FluentAssertions;
 using FluentValidation;
 using PostForge.Application.Posts.Commands.CreatePost;
+using PostForge.Application.Posts.DTOs;
 using PostForge.Domain.Entities;
 using PostForge.Domain.ValueObjects;
 using PostForge.Infrastructure.DAL.Repositories;
@@ -28,14 +29,33 @@ public class CreatePostCommandHandlerTests : HandlerTestBase
     public async Task Handle_ShouldAddTargetPlatforms()
     {
         var handler = new CreatePostHandler(PostRepository, DataContext);
-        var platforms = new List<SocialPlatform> { SocialPlatform.Facebook, SocialPlatform.Instagram };
+        var platforms = new List<string> { "FACEBOOK", "INSTAGRAM" };
         var command = new CreatePostCommand("Test content", null, platforms, null);
 
         var result = await handler.Handle(command, CancellationToken.None);
 
         var post = await PostRepository.LoadAsync(result);
         post!.TargetPlatforms.Should().HaveCount(2);
-        post.TargetPlatforms.Should().Contain([SocialPlatform.Facebook, SocialPlatform.Instagram]);
+        post.TargetPlatforms.Should().Contain(["FACEBOOK", "INSTAGRAM"]);
+    }
+
+    [Fact]
+    public async Task Handle_ShouldAddTagsToPost()
+    {
+        var handler = new CreatePostHandler(PostRepository, DataContext);
+        var tags = new List<PostTagDto>
+        {
+            new("FACEBOOK", PostTagType.Mention, "marco.rossi"),
+            new("FACEBOOK", PostTagType.Collaborator, "silvia.neri")
+        };
+        var command = new CreatePostCommand("Test content", null, ["FACEBOOK"], null, tags);
+
+        var result = await handler.Handle(command, CancellationToken.None);
+
+        var post = await PostRepository.LoadAsync(result);
+        post!.Tags.Should().HaveCount(2);
+        post.Tags.Should().Contain(t =>
+            t.Platform == "FACEBOOK" && t.TagType == PostTagType.Collaborator && t.Username == "silvia.neri");
     }
 
     [Fact]
@@ -122,10 +142,57 @@ public class CreatePostValidatorTests
     [Fact]
     public void Validator_ShouldAcceptCommandWithPlatforms()
     {
-        var command = new CreatePostCommand("Content", null, [SocialPlatform.Facebook], null);
+        var command = new CreatePostCommand("Content", null, ["FACEBOOK"], null);
 
         var result = _validator.Validate(command);
 
         result.IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Validator_ShouldAcceptCommandWithTagsOnTargetedPlatforms()
+    {
+        var command = new CreatePostCommand(
+            "Content",
+            null,
+            ["FACEBOOK"],
+            null,
+            [new PostTagDto("FACEBOOK", PostTagType.Collaborator, "silvia.neri")]);
+
+        var result = _validator.Validate(command);
+
+        result.IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Validator_ShouldRejectTagOnUntargetedPlatform()
+    {
+        var command = new CreatePostCommand(
+            "Content",
+            null,
+            ["INSTAGRAM"],
+            null,
+            [new PostTagDto("FACEBOOK", PostTagType.Collaborator, "silvia.neri")]);
+
+        var result = _validator.Validate(command);
+
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(e => e.PropertyName == "Tags");
+    }
+
+    [Fact]
+    public void Validator_ShouldRejectTagWithInvalidTagType()
+    {
+        var command = new CreatePostCommand(
+            "Content",
+            null,
+            ["FACEBOOK"],
+            null,
+            [new PostTagDto("FACEBOOK", (PostTagType)999, "silvia.neri")]);
+
+        var result = _validator.Validate(command);
+
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(e => e.PropertyName.Contains("TagType"));
     }
 }
