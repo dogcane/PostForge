@@ -53,14 +53,20 @@ PostForge.slnx
 src/
   PostForge.Domain/        Entities/, ValueObjects/, Providers/ (interfacce + contracts)
   PostForge.Application/   Posts/, Campaigns/, Scheduling/, Ai/
-  PostForge.Infrastructure/ Messaging/, Resilience/, registries provider
-  PostForge.Infrastructure.DAL/  Persistence (PostForgeDbContext + repository implementations)
-  PostForge.Providers.<Nome>/    un progetto per ogni provider (Facebook, Instagram, TikTok, YouTube, OpenAI, Anthropic, GoogleGemini, MicrosoftFoundry, DallE, StableDiffusion)
+  PostForge.Infrastructure/ Messaging/ (sole interfacce: IPublishJobSender) — progetto cross tra Domain e Application
+  PostForge.Infrastructure.DAL/  Persistence (PostForgeDbContext + repository implementations) + AddDataAccess
+  PostForge.Infrastructure.Providers/  registries provider (social + AI) + AddProviderRegistries
+  PostForge.Infrastructure.Messaging.ServiceBus/  ServiceBusPublishJobSender + AddServiceBusPublishJobSender
+  PostForge.Infrastructure.Resilience/  ResiliencePolicies (Polly)
+  PostForge.Api/                 composition root: AddInfrastructure = AddDataAccess + provider + AddProviderRegistries + AddServiceBusPublishJobSender
+  PostForge.Worker/              registrazione DI locale (AddWorkerInfrastructure) che compone gli stessi moduli Infrastructure, senza ProjectReference verso PostForge.Api
+  PostForge.Providers.<Nome>/    un progetto per ogni provider (Facebook, Instagram, TikTok, YouTube, OpenAI, Anthropic, GoogleGemini, MicrosoftFoundry, DallE, StableDiffusion). PostForge.Providers.Fake = fake social provider completo per test/dev (implementa tutta ISocialPlatformProvider)
   PostForge.Api/
   PostForge.Worker/
 web/                       Angular SPA
 tests/
-  PostForge.UnitTests/
+  PostForge.Providers.<Nome>.Tests/  un progetto di test per ogni provider con test propri (es. PostForge.Providers.Facebook.Tests)
+  PostForge.UnitTests/               Domain + Application + Infrastructure (registry provider, ecc.)
   PostForge.IntegrationTests/
 infra/
   main.bicep
@@ -83,6 +89,25 @@ infra/
 - Ogni provider esterno ha rate limit e SLA propri → Polly per retry, circuit breaker, timeout dedicati.
 - Token OAuth e chiavi AI mai in chiaro → Key Vault + Managed Identity.
 - Provider esterni mockabili nei test (WireMock.NET).
+
+## Convenzioni C# (.NET 10 / C# 14)
+
+Target `net10.0` → C# 14 di default (niente `<LangVersion>` esplicito). Usare attivamente le feature moderne, niente codice "legacy" se esiste l'equivalente nuovo:
+
+- **Primary constructors** per classi con dipendenze iniettate (handlers, services, provider, registry):
+
+```csharp
+public sealed class FacebookProvider(HttpClient httpClient, IOptions<FacebookProviderOptions> options)
+    : ISocialPlatformProvider
+```
+
+- **`field` keyword (C# 14)** per semi-auto properties quando serve un backing field con logica nel getter/setter — niente campo privato + property separati se `field` basta.
+- **Default interface implementations** per i membri opzionali delle interfacce provider (già in `ISocialPlatformProvider`): un provider implementa solo ciò che supporta davvero; il resto eredita il default `throw new NotSupportedException(...)`. Non rendere astratti membri che ogni provider dovrebbe stub-are.
+- **Records / positional records** per contract e DTO (`record OAuthTokens(string AccessToken, string RefreshToken, DateTime ExpiresAtUtc)`); `record struct` per i value type; `init` + `required` per i modelli immutabili.
+- **Collection expressions** `[]` ovunque: `List<MediaAsset> = []`, `?? []`, spread `[.. source]`, `params` collections per metodi variadici. Niente `new List<T>()` / `ToArray()` boilerplate.
+- **Target-typed `new`** + pattern matching avanzato (switch expression, property pattern, list pattern) e raw string literals `"""` per payload di test.
+- **ImplicitUsings + Nullable** abilitati in ogni csproj.
+- **Eccezione DDD**: le Entity di dominio restano con costruttori `private` + factory `Create()` che restituisce `OperationResult<T>` (vedi sotto) — primary constructor NON si applica alle entity, perché la costruzione passa dalla validazione Resulz. Si applica a tutto il resto.
 
 ## Domain Events
 

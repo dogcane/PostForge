@@ -1,6 +1,6 @@
 using Mediator;
 using PostForge.Application;
-using PostForge.Infrastructure;
+using PostForge.Worker;
 using PostForge.Worker.Jobs;
 using PostForge.Worker.Services;
 using Quartz;
@@ -13,7 +13,7 @@ builder.ConfigureServices((hostContext, services) =>
 {
     services.AddApplication();
     services.AddMediator(options => options.ServiceLifetime = ServiceLifetime.Scoped);
-    services.AddInfrastructure(hostContext.Configuration);
+    services.AddWorkerInfrastructure(hostContext.Configuration);
 
     services.AddSingleton<IJobFactory, PublishPostJobFactory>();
     services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();

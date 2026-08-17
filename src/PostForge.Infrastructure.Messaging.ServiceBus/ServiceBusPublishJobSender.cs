@@ -1,6 +1,7 @@
 using Azure.Messaging.ServiceBus;
+using PostForge.Infrastructure.Messaging;
 
-namespace PostForge.Infrastructure.Messaging;
+namespace PostForge.Infrastructure.Messaging.ServiceBus;
 
 public class ServiceBusPublishJobSender : IPublishJobSender
 {

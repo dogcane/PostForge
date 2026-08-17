@@ -19,6 +19,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PostForge.Application\PostForge.Application.csproj" />
+    <ProjectReference Include="..\PostForge.Infrastructure.DAL\PostForge.Infrastructure.DAL.csproj" />
+    <ProjectReference Include="..\PostForge.Infrastructure.Messaging.ServiceBus\PostForge.Infrastructure.Messaging.ServiceBus.csproj" />
     <ProjectReference Include="..\PostForge.Infrastructure\PostForge.Infrastructure.csproj" />
+    <ProjectReference Include="..\PostForge.Infrastructure.Providers\PostForge.Infrastructure.Providers.csproj" />
+    <ProjectReference Include="..\PostForge.Providers.Facebook\PostForge.Providers.Facebook.csproj" />
+    <ProjectReference Include="..\PostForge.Providers.Instagram\PostForge.Providers.Instagram.csproj" />
+    <ProjectReference Include="..\PostForge.Providers.TikTok\PostForge.Providers.TikTok.csproj" />
+    <ProjectReference Include="..\PostForge.Providers.YouTube\PostForge.Providers.YouTube.csproj" />
   </ItemGroup>
 </Project>

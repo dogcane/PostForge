@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Microsoft.Extensions.Options;
 using PostForge.Domain.Providers;
 using PostForge.Infrastructure.Providers.Social;
 using PostForge.Providers.Facebook;
@@ -10,9 +11,12 @@ namespace PostForge.UnitTests.Infrastructure;
 
 public class SocialPlatformProviderRegistryTests
 {
+    private static FacebookProvider CreateFacebookProvider()
+        => new(new HttpClient(), Options.Create(new FacebookProviderOptions()));
+
     private readonly ISocialPlatformProvider[] _providers =
     [
-        new FacebookProvider(),
+        CreateFacebookProvider(),
         new InstagramProvider(),
         new TikTokProvider(),
         new YouTubeProvider(),
@@ -67,7 +71,7 @@ public class SocialPlatformProviderRegistryTests
     [Fact]
     public void Registry_ShouldAcceptAnyIEnumerableOfProviders()
     {
-        var registry = new SocialPlatformProviderRegistry([new FacebookProvider()]);
+        var registry = new SocialPlatformProviderRegistry([CreateFacebookProvider()]);
 
         registry.AvailableProviderKeys.Should().ContainSingle().Which.Should().Be("FACEBOOK");
     }

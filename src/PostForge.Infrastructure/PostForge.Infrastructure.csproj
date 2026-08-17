@@ -1,29 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <ProjectReference Include="..\PostForge.Domain\PostForge.Domain.csproj" />
     <ProjectReference Include="..\PostForge.Application\PostForge.Application.csproj" />
-    <ProjectReference Include="..\PostForge.Infrastructure.DAL\PostForge.Infrastructure.DAL.csproj" />
-    <ProjectReference Include="..\PostForge.Providers.Anthropic\PostForge.Providers.Anthropic.csproj" />
-    <ProjectReference Include="..\PostForge.Providers.DallE\PostForge.Providers.DallE.csproj" />
-    <ProjectReference Include="..\PostForge.Providers.Facebook\PostForge.Providers.Facebook.csproj" />
-    <ProjectReference Include="..\PostForge.Providers.GoogleGemini\PostForge.Providers.GoogleGemini.csproj" />
-    <ProjectReference Include="..\PostForge.Providers.Instagram\PostForge.Providers.Instagram.csproj" />
-    <ProjectReference Include="..\PostForge.Providers.MicrosoftFoundry\PostForge.Providers.MicrosoftFoundry.csproj" />
-    <ProjectReference Include="..\PostForge.Providers.OpenAI\PostForge.Providers.OpenAI.csproj" />
-    <ProjectReference Include="..\PostForge.Providers.StableDiffusion\PostForge.Providers.StableDiffusion.csproj" />
-    <ProjectReference Include="..\PostForge.Providers.TikTok\PostForge.Providers.TikTok.csproj" />
-    <ProjectReference Include="..\PostForge.Providers.YouTube\PostForge.Providers.YouTube.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Azure.Identity" Version="1.21.0" />
-    <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.20.2" />
-    <PackageReference Include="Azure.Security.KeyVault.Secrets" Version="4.11.0" />
-    <PackageReference Include="Azure.Storage.Blobs" Version="12.29.1" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.10" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.10" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
-    <PackageReference Include="Polly.Core" Version="8.7.0" />
   </ItemGroup>
 
   <PropertyGroup>

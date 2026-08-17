@@ -45,8 +45,8 @@ src/
 # build
 dotnet build
 
-# test unitari
-dotnet test tests/PostForge.UnitTests
+# test unitari (Domain, Application, Infrastructure + provider)
+dotnet test PostForge.slnx --filter "FullyQualifiedName!~IntegrationTests"
 
 # test integrazione (richiede Docker)
 dotnet test tests/PostForge.IntegrationTests

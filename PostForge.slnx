@@ -5,9 +5,13 @@
     <Project Path="src/PostForge.Domain/PostForge.Domain.csproj" />
     <Project Path="src/PostForge.Infrastructure/PostForge.Infrastructure.csproj" />
     <Project Path="src/PostForge.Infrastructure.DAL/PostForge.Infrastructure.DAL.csproj" />
+    <Project Path="src/PostForge.Infrastructure.Messaging.ServiceBus/PostForge.Infrastructure.Messaging.ServiceBus.csproj" />
+    <Project Path="src/PostForge.Infrastructure.Providers/PostForge.Infrastructure.Providers.csproj" />
+    <Project Path="src/PostForge.Infrastructure.Resilience/PostForge.Infrastructure.Resilience.csproj" />
     <Project Path="src/PostForge.Providers.Anthropic/PostForge.Providers.Anthropic.csproj" />
     <Project Path="src/PostForge.Providers.DallE/PostForge.Providers.DallE.csproj" />
     <Project Path="src/PostForge.Providers.Facebook/PostForge.Providers.Facebook.csproj" />
+    <Project Path="src/PostForge.Providers.Fake/PostForge.Providers.Fake.csproj" />
     <Project Path="src/PostForge.Providers.GoogleGemini/PostForge.Providers.GoogleGemini.csproj" />
     <Project Path="src/PostForge.Providers.Instagram/PostForge.Providers.Instagram.csproj" />
     <Project Path="src/PostForge.Providers.MicrosoftFoundry/PostForge.Providers.MicrosoftFoundry.csproj" />
@@ -19,6 +23,11 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/PostForge.IntegrationTests/PostForge.IntegrationTests.csproj" />
+    <Project Path="tests/PostForge.Providers.Facebook.Tests/PostForge.Providers.Facebook.Tests.csproj" />
+    <Project Path="tests/PostForge.Providers.Fake.Tests/PostForge.Providers.Fake.Tests.csproj" />
+    <Project Path="tests/PostForge.Providers.Instagram.Tests/PostForge.Providers.Instagram.Tests.csproj" />
+    <Project Path="tests/PostForge.Providers.TikTok.Tests/PostForge.Providers.TikTok.Tests.csproj" />
+    <Project Path="tests/PostForge.Providers.YouTube.Tests/PostForge.Providers.YouTube.Tests.csproj" />
     <Project Path="tests/PostForge.UnitTests/PostForge.UnitTests.csproj" />
   </Folder>
 </Solution>

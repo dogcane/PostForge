@@ -26,7 +26,7 @@
     <ProjectReference Include="..\..\src\PostForge.Domain\PostForge.Domain.csproj" />
     <ProjectReference Include="..\..\src\PostForge.Application\PostForge.Application.csproj" />
     <ProjectReference Include="..\..\src\PostForge.Infrastructure.DAL\PostForge.Infrastructure.DAL.csproj" />
-    <ProjectReference Include="..\..\src\PostForge.Infrastructure\PostForge.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\PostForge.Infrastructure.Providers\PostForge.Infrastructure.Providers.csproj" />
     <ProjectReference Include="..\..\src\PostForge.Providers.Facebook\PostForge.Providers.Facebook.csproj" />
     <ProjectReference Include="..\..\src\PostForge.Providers.Instagram\PostForge.Providers.Instagram.csproj" />
     <ProjectReference Include="..\..\src\PostForge.Providers.TikTok\PostForge.Providers.TikTok.csproj" />

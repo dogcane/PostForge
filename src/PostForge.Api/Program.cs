@@ -1,6 +1,6 @@
 using Mediator;
+using PostForge.Api;
 using PostForge.Application;
-using PostForge.Infrastructure;
 using PostForge.Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);

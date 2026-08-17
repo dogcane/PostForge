@@ -21,7 +21,11 @@ Sei un tester specializzato in .NET. Scrivie test per PostForge, un'app per gest
 ### Unit test (`tests/PostForge.UnitTests/`)
 - **Domain**: invarianti delle entità, logica dei value object, eventi di dominio.
 - **Application**: handler di comandi/query (con infrastruttura mockata), validazione FluentValidation.
-- **Infrastructure**: mappature EF Core, serializzazione, logica di retry (mockando Polly).
+- **Infrastructure**: mappature EF Core, serializzazione, logica di retry (mockando Polly), registry dei provider.
+
+### Provider test (`tests/PostForge.Providers.<Nome>.Tests/`)
+- Un progetto di test per ogni provider (es. `PostForge.Providers.Facebook.Tests`).
+- Metadata/capabilities del provider e comportamento di ogni metodo dell'interfaccia, con HTTP mockato (fake `HttpMessageHandler` / WireMock.NET), mai chiamate a API reali.
 
 ### Integration test (`tests/PostForge.IntegrationTests/`)
 - **Persistenza**: repository, unit of work con Testcontainers per Azure SQL.
@@ -39,8 +43,8 @@ Sei un tester specializzato in .NET. Scrivie test per PostForge, un'app per gest
 ## Comandi previsti
 
 ```powershell
-# Unit test veloci (senza container)
-dotnet test tests/PostForge.UnitTests
+# Unit test veloci (senza container) — UnitTests + tutti i provider
+dotnet test PostForge.slnx --filter "FullyQualifiedName!~IntegrationTests"
 
 # Soli integration test
 dotnet test tests/PostForge.IntegrationTests --filter "Category=Integration"

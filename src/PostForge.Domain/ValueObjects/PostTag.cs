@@ -28,10 +28,5 @@ public sealed class PostTag : ValueObject
         return OperationResult<PostTag>.MakeSuccess(new PostTag(platform, tagType, username));
     }
 
-    protected override IEnumerable<object> GetEqualityComponents()
-    {
-        yield return Platform;
-        yield return TagType;
-        yield return Username;
-    }
+    protected override IEnumerable<object> GetEqualityComponents() => [Platform, TagType, Username];
 }
