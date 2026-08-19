@@ -1,25 +1,25 @@
-export enum ScheduleSlotStatus {
-  Draft = 'Draft',
-  Ready = 'Ready',
-  Scheduled = 'Scheduled',
-  Publishing = 'Publishing',
-  Published = 'Published',
-  Failed = 'Failed'
-}
+import { PostStatus } from './post.model';
+
+export { PostStatus as ScheduleSlotStatus };
 
 export interface ScheduleSlot {
   id: string;
   postId: string;
   platform: string;
   scheduledAtUtc: string;
-  status: ScheduleSlotStatus;
+  status: PostStatus;
   retryCount: number;
-  publishedAt?: string;
-  errorMessage?: string;
+  lastError?: string;
+  publishedAtUtc?: string;
 }
 
 export interface ScheduleRequest {
   postId: string;
   platform: string;
   scheduledAtUtc: string;
+}
+
+export interface MarkSlotFailedRequest {
+  slotId: string;
+  error: string;
 }

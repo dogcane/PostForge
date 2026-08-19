@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -10,7 +10,9 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { Observable, finalize } from 'rxjs';
 import { CampaignGoal, CampaignChannel } from '../../../models/campaign.model';
+import { ApiService } from '../../../services/api.service';
 
 @Component({
   selector: 'app-campaign-form',
@@ -36,6 +38,8 @@ import { CampaignGoal, CampaignChannel } from '../../../models/campaign.model';
         </div>
       </div>
 
+      <div class="pf-alert" *ngIf="error">{{ error }}</div>
+
       <mat-card class="pf-card pf-form__card">
         <div class="pf-form__title">
           <div class="pf-feature-icon">
@@ -43,31 +47,26 @@ import { CampaignGoal, CampaignChannel } from '../../../models/campaign.model';
           </div>
           <div>
             <h2>Campaign details</h2>
-            <p>Name it, describe the intent and set the runway.</p>
+            <p>Name it, set the intent and choose the runway.</p>
           </div>
         </div>
 
         <mat-form-field appearance="outline">
           <mat-label>Campaign name</mat-label>
-          <input matInput [(ngModel)]="campaignName" placeholder="Enter campaign name">
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Description</mat-label>
-          <textarea matInput [(ngModel)]="campaignDescription" rows="3" placeholder="Campaign description"></textarea>
+          <input matInput [(ngModel)]="campaignName" name="name" placeholder="Enter campaign name" />
         </mat-form-field>
 
         <div class="pf-form-row">
           <mat-form-field appearance="outline">
             <mat-label>Goal</mat-label>
-            <mat-select [(ngModel)]="selectedGoal">
+            <mat-select [(ngModel)]="selectedGoal" name="goal">
               <mat-option *ngFor="let goal of goals" [value]="goal.value">{{ goal.label }}</mat-option>
             </mat-select>
           </mat-form-field>
 
           <mat-form-field appearance="outline">
             <mat-label>Channel</mat-label>
-            <mat-select [(ngModel)]="selectedChannel">
+            <mat-select [(ngModel)]="selectedChannel" name="channel">
               <mat-option *ngFor="let channel of channels" [value]="channel.value">{{ channel.label }}</mat-option>
             </mat-select>
           </mat-form-field>
@@ -76,14 +75,14 @@ import { CampaignGoal, CampaignChannel } from '../../../models/campaign.model';
         <div class="pf-form-row">
           <mat-form-field appearance="outline">
             <mat-label>Start date</mat-label>
-            <input matInput [matDatepicker]="startPicker" [(ngModel)]="startDate">
+            <input matInput [matDatepicker]="startPicker" [(ngModel)]="startDate" name="startDate" />
             <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
             <mat-datepicker #startPicker></mat-datepicker>
           </mat-form-field>
 
           <mat-form-field appearance="outline">
-            <mat-label>End date</mat-label>
-            <input matInput [matDatepicker]="endPicker" [(ngModel)]="endDate">
+            <mat-label>End date (optional)</mat-label>
+            <input matInput [matDatepicker]="endPicker" [(ngModel)]="endDate" name="endDate" />
             <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
             <mat-datepicker #endPicker></mat-datepicker>
           </mat-form-field>
@@ -92,22 +91,24 @@ import { CampaignGoal, CampaignChannel } from '../../../models/campaign.model';
 
       <mat-card class="pf-card pf-form-actions">
         <button mat-button (click)="cancel()">Cancel</button>
-        <button mat-flat-button class="pf-btn-primary" (click)="save()">
-          <mat-icon>save</mat-icon>
+        <button mat-flat-button class="pf-btn-primary" (click)="save()" [disabled]="saving || !campaignName.trim()">
+          <mat-icon>{{ saving ? 'hourglass_top' : 'save' }}</mat-icon>
           {{ isEditing ? 'Update' : 'Create' }}
         </button>
       </mat-card>
     </div>
   `
 })
-export class CampaignFormComponent {
+export class CampaignFormComponent implements OnInit {
   isEditing = false;
+  campaignId = '';
   campaignName = '';
-  campaignDescription = '';
   selectedGoal: CampaignGoal = CampaignGoal.Awareness;
   selectedChannel: CampaignChannel = CampaignChannel.Organic;
   startDate: Date | null = new Date();
-  endDate: Date | null = new Date(Date.now() + 86400000 * 30);
+  endDate: Date | null = null;
+  saving = false;
+  error: string | null = null;
 
   goals = [
     { value: CampaignGoal.Awareness, label: 'Awareness' },
@@ -122,9 +123,27 @@ export class CampaignFormComponent {
 
   constructor(
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private api: ApiService
   ) {
-    this.isEditing = !!this.route.snapshot.paramMap.get('id');
+    const id = this.route.snapshot.paramMap.get('id');
+    this.isEditing = !!id;
+    this.campaignId = id ?? '';
+  }
+
+  ngOnInit(): void {
+    if (this.isEditing) {
+      this.api.getCampaign(this.campaignId).subscribe({
+        next: (campaign) => {
+          this.campaignName = campaign.name;
+          this.selectedGoal = campaign.goal;
+          this.selectedChannel = campaign.channel;
+          this.startDate = new Date(campaign.startDateUtc);
+          this.endDate = campaign.endDateUtc ? new Date(campaign.endDateUtc) : null;
+        },
+        error: () => (this.error = 'Unable to load the campaign.')
+      });
+    }
   }
 
   cancel(): void {
@@ -132,6 +151,37 @@ export class CampaignFormComponent {
   }
 
   save(): void {
-    this.router.navigate(['/campaigns']);
+    if (this.saving || !this.campaignName.trim()) {
+      return;
+    }
+    if (!this.startDate) {
+      this.error = 'A start date is required.';
+      return;
+    }
+
+    this.saving = true;
+    this.error = null;
+
+    const payload = {
+      name: this.campaignName.trim(),
+      goal: this.selectedGoal,
+      channel: this.selectedChannel,
+      startDateUtc: this.startDate.toISOString(),
+      endDateUtc: this.endDate ? this.endDate.toISOString() : undefined
+    };
+
+    let request: Observable<unknown>;
+    if (this.isEditing) {
+      request = this.api.updateCampaign(this.campaignId, { ...payload, id: this.campaignId });
+    } else {
+      request = this.api.createCampaign(payload);
+    }
+
+    request.pipe(finalize(() => (this.saving = false))).subscribe({
+      next: () => this.router.navigate(['/campaigns']),
+      error: () => {
+        this.error = 'Unable to save the campaign.';
+      }
+    });
   }
 }

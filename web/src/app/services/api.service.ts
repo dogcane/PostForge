@@ -1,13 +1,25 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Post, PostContent } from '../models/post.model';
-import { Campaign, CampaignRequest } from '../models/campaign.model';
-import { ScheduleSlot, ScheduleRequest } from '../models/schedule-slot.model';
+import {
+  ChangePostStatusRequest,
+  CreatePostRequest,
+  Post,
+  UpdatePostRequest
+} from '../models/post.model';
+import {
+  Campaign,
+  CreateCampaignRequest,
+  UpdateCampaignRequest
+} from '../models/campaign.model';
+import {
+  MarkSlotFailedRequest,
+  ScheduleRequest,
+  ScheduleSlot
+} from '../models/schedule-slot.model';
+import { CaptionRequest, CaptionResult, ImageRequest, ImageResult } from '../models/ai.model';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class ApiService {
   private baseUrl = '/api/v1';
 
@@ -21,16 +33,20 @@ export class ApiService {
     return this.http.get<Post>(`${this.baseUrl}/posts/${id}`);
   }
 
-  createPost(post: PostContent): Observable<Post> {
-    return this.http.post<Post>(`${this.baseUrl}/posts`, post);
+  createPost(request: CreatePostRequest): Observable<string> {
+    return this.http.post<string>(`${this.baseUrl}/posts`, request);
   }
 
-  updatePost(id: string, post: PostContent): Observable<Post> {
-    return this.http.put<Post>(`${this.baseUrl}/posts/${id}`, post);
+  updatePost(id: string, request: UpdatePostRequest): Observable<void> {
+    return this.http.put<void>(`${this.baseUrl}/posts/${id}`, request);
   }
 
   deletePost(id: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/posts/${id}`);
+  }
+
+  changePostStatus(request: ChangePostStatusRequest): Observable<void> {
+    return this.http.patch<void>(`${this.baseUrl}/posts/${request.postId}/status`, request);
   }
 
   getCampaigns(): Observable<Campaign[]> {
@@ -41,34 +57,48 @@ export class ApiService {
     return this.http.get<Campaign>(`${this.baseUrl}/campaigns/${id}`);
   }
 
-  createCampaign(campaign: CampaignRequest): Observable<Campaign> {
-    return this.http.post<Campaign>(`${this.baseUrl}/campaigns`, campaign);
+  createCampaign(request: CreateCampaignRequest): Observable<string> {
+    return this.http.post<string>(`${this.baseUrl}/campaigns`, request);
   }
 
-  updateCampaign(id: string, campaign: CampaignRequest): Observable<Campaign> {
-    return this.http.put<Campaign>(`${this.baseUrl}/campaigns/${id}`, campaign);
+  updateCampaign(id: string, request: UpdateCampaignRequest): Observable<void> {
+    return this.http.put<void>(`${this.baseUrl}/campaigns/${id}`, request);
   }
 
   deleteCampaign(id: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/campaigns/${id}`);
   }
 
-  getScheduleSlots(postId?: string): Observable<ScheduleSlot[]> {
-    let params = new HttpParams();
-    if (postId) {
-      params = params.set('postId', postId);
-    }
-    return this.http.get<ScheduleSlot[]>(`${this.baseUrl}/scheduling/slots`, { params });
+  schedulePost(request: ScheduleRequest): Observable<string> {
+    return this.http.post<string>(`${this.baseUrl}/scheduling/schedule`, request);
   }
 
-  createScheduleSlot(slot: ScheduleRequest): Observable<ScheduleSlot> {
-    return this.http.post<ScheduleSlot>(`${this.baseUrl}/scheduling/slots`, slot);
+  publishSlot(slotId: string): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/scheduling/${slotId}/publish`, null);
+  }
+
+  markSlotFailed(slotId: string, request: MarkSlotFailedRequest): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/scheduling/${slotId}/fail`, request);
+  }
+
+  getPendingSlots(): Observable<ScheduleSlot[]> {
+    return this.http.get<ScheduleSlot[]>(`${this.baseUrl}/scheduling/pending`);
   }
 
   getCalendarSlots(start: string, end: string): Observable<ScheduleSlot[]> {
-    const params = new HttpParams()
-      .set('start', start)
-      .set('end', end);
+    const params = new HttpParams().set('start', start).set('end', end);
     return this.http.get<ScheduleSlot[]>(`${this.baseUrl}/scheduling/calendar`, { params });
+  }
+
+  getSlotsByPost(postId: string): Observable<ScheduleSlot[]> {
+    return this.http.get<ScheduleSlot[]>(`${this.baseUrl}/scheduling/by-post/${postId}`);
+  }
+
+  generateCaption(request: CaptionRequest): Observable<CaptionResult> {
+    return this.http.post<CaptionResult>(`${this.baseUrl}/ai/caption`, request);
+  }
+
+  generateImage(request: ImageRequest): Observable<ImageResult> {
+    return this.http.post<ImageResult>(`${this.baseUrl}/ai/image`, request);
   }
 }

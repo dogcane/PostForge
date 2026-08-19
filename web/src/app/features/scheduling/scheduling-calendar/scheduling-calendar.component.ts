@@ -1,8 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { ScheduleSlot, ScheduleSlotStatus } from '../../../models/schedule-slot.model';
+import { ScheduleSlot } from '../../../models/schedule-slot.model';
+import { postStatusClass, postStatusLabel } from '../../../models/post.model';
+import { platformBadgeClass, platformIcon, platformLabel } from '../../../models/platform.model';
+import { ApiService } from '../../../services/api.service';
 
 @Component({
   selector: 'app-scheduling-calendar',
@@ -27,6 +30,8 @@ import { ScheduleSlot, ScheduleSlotStatus } from '../../../models/schedule-slot.
         </div>
       </div>
 
+      <div class="pf-alert" *ngIf="error">{{ error }}</div>
+
       <div class="pf-calendar__grid">
         <div class="pf-calendar__dow" *ngFor="let day of dayNames">{{ day }}</div>
 
@@ -38,52 +43,94 @@ import { ScheduleSlot, ScheduleSlotStatus } from '../../../models/schedule-slot.
         >
           <span class="pf-calendar__num">{{ day.number }}</span>
           <div class="pf-calendar__slots">
-            <span class="pf-badge pf-badge--sm" *ngFor="let slot of day.slots" [class]="'pf-badge--' + slot.platform.toLowerCase()">
+            <span class="pf-badge pf-badge--sm" *ngFor="let slot of day.slots" [class]="platformBadgeClass(slot.platform)">
               <mat-icon>{{ platformIcon(slot.platform) }}</mat-icon>
-              {{ slot.platform | slice: 0:4 }}
+              {{ platformLabel(slot.platform) }}
             </span>
           </div>
         </div>
       </div>
 
-      <h2 class="pf-section-title">Upcoming scheduled posts</h2>
+      <h2 class="pf-section-title">Pending scheduled posts</h2>
       <div class="pf-upcoming">
-        <mat-card class="pf-card pf-slot-row" *ngFor="let slot of upcomingSlots">
-          <span class="pf-status" [class]="'pf-status--' + slot.status.toLowerCase()">{{ slot.status }}</span>
-          <span class="pf-badge" [class]="'pf-badge--' + slot.platform.toLowerCase()">
-            <mat-icon>{{ platformIcon(slot.platform) }}</mat-icon>
-            {{ platformLabel(slot.platform) }}
-          </span>
-          <span class="pf-slot-row__time">
-            <mat-icon>schedule</mat-icon>
-            {{ slot.scheduledAtUtc | date: 'MMM d, yyyy · h:mm a' }}
-          </span>
-        </mat-card>
+        <ng-container *ngIf="!loading; else loadingState">
+          <mat-card class="pf-card pf-slot-row" *ngFor="let slot of upcomingSlots">
+            <span class="pf-status" [class]="postStatusClass(slot.status)">{{ postStatusLabel(slot.status) }}</span>
+            <span class="pf-badge" [class]="platformBadgeClass(slot.platform)">
+              <mat-icon>{{ platformIcon(slot.platform) }}</mat-icon>
+              {{ platformLabel(slot.platform) }}
+            </span>
+            <span class="pf-slot-row__time">
+              <mat-icon>schedule</mat-icon>
+              {{ slot.scheduledAtUtc | date: 'MMM d, yyyy · h:mm a' }}
+            </span>
+            <span class="pf-slot-row__retry" *ngIf="slot.retryCount > 0">
+              retry #{{ slot.retryCount }}
+            </span>
+          </mat-card>
 
-        <div class="pf-empty" *ngIf="upcomingSlots.length === 0">
-          <mat-icon>event_note</mat-icon>
-          <h3>Nothing scheduled</h3>
-          <p>Create a post and schedule it to appear here.</p>
-        </div>
+          <div class="pf-empty" *ngIf="upcomingSlots.length === 0">
+            <mat-icon>event_note</mat-icon>
+            <h3>Nothing scheduled</h3>
+            <p>Create a post and schedule it to appear here.</p>
+          </div>
+        </ng-container>
       </div>
+
+      <ng-template #loadingState>
+        <div class="pf-loading"><mat-icon>autorenew</mat-icon> Loading scheduled posts...</div>
+      </ng-template>
     </div>
   `
 })
-export class SchedulingCalendarComponent {
+export class SchedulingCalendarComponent implements OnInit {
   currentMonth: Date = new Date();
   dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   calendarDays: { number: number; otherMonth: boolean; isToday: boolean; slots: ScheduleSlot[] }[] = [];
-  upcomingSlots: ScheduleSlot[] = [
-    this.makeSlot('1', 'facebook', 0, 10, 0, ScheduleSlotStatus.Scheduled),
-    this.makeSlot('2', 'instagram', 0, 15, 30, ScheduleSlotStatus.Publishing),
-    this.makeSlot('3', 'youtube', 1, 9, 0, ScheduleSlotStatus.Scheduled),
-    this.makeSlot('4', 'tiktok', 3, 18, 0, ScheduleSlotStatus.Ready),
-    this.makeSlot('5', 'facebook', -1, 18, 0, ScheduleSlotStatus.Published)
-  ];
+  monthSlots: ScheduleSlot[] = [];
+  upcomingSlots: ScheduleSlot[] = [];
+  loading = false;
+  error: string | null = null;
 
-  constructor() {
-    this.buildCalendar();
+  constructor(private api: ApiService) {}
+
+  ngOnInit(): void {
+    this.loadMonthSlots();
+    this.loadPendingSlots();
+  }
+
+  private loadMonthSlots(): void {
+    this.loading = true;
+    this.error = null;
+    const start = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth(), 1);
+    const end = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth() + 1, 1);
+    this.api.getCalendarSlots(start.toISOString(), end.toISOString()).subscribe({
+      next: (slots) => {
+        this.monthSlots = slots;
+        this.loading = false;
+        this.buildCalendar();
+      },
+      error: () => {
+        this.error = 'Unable to load scheduled posts.';
+        this.loading = false;
+      }
+    });
+  }
+
+  private loadPendingSlots(): void {
+    this.api.getPendingSlots().subscribe({
+      next: (slots) => {
+        this.upcomingSlots = [...slots].sort(
+          (a, b) => new Date(a.scheduledAtUtc).getTime() - new Date(b.scheduledAtUtc).getTime()
+        );
+      },
+      error: () => {
+        if (!this.error) {
+          this.error = 'Unable to load the publishing queue.';
+        }
+      }
+    });
   }
 
   get currentMonthName(): string {
@@ -94,55 +141,14 @@ export class SchedulingCalendarComponent {
     return this.currentMonth.getFullYear();
   }
 
-  private makeSlot(
-    id: string,
-    platform: string,
-    dayOffset: number,
-    hours: number,
-    minutes: number,
-    status: ScheduleSlotStatus
-  ): ScheduleSlot {
-    const d = new Date();
-    d.setDate(d.getDate() + dayOffset);
-    d.setHours(hours, minutes, 0, 0);
-    return {
-      id,
-      postId: id,
-      platform,
-      scheduledAtUtc: d.toISOString(),
-      status,
-      retryCount: 0
-    };
-  }
-
   previousMonth(): void {
     this.currentMonth = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth() - 1, 1);
-    this.buildCalendar();
+    this.loadMonthSlots();
   }
 
   nextMonth(): void {
     this.currentMonth = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth() + 1, 1);
-    this.buildCalendar();
-  }
-
-  platformIcon(platform: string): string {
-    switch (platform.toLowerCase()) {
-      case 'facebook': return 'thumb_up';
-      case 'instagram': return 'photo_camera';
-      case 'tiktok': return 'music_note';
-      case 'youtube': return 'play_circle';
-      default: return 'language';
-    }
-  }
-
-  platformLabel(platform: string): string {
-    switch (platform.toLowerCase()) {
-      case 'facebook': return 'Facebook';
-      case 'instagram': return 'Instagram';
-      case 'tiktok': return 'TikTok';
-      case 'youtube': return 'YouTube';
-      default: return platform;
-    }
+    this.loadMonthSlots();
   }
 
   private buildCalendar(): void {
@@ -189,7 +195,7 @@ export class SchedulingCalendarComponent {
   }
 
   private assignSlots(): void {
-    for (const slot of this.upcomingSlots) {
+    for (const slot of this.monthSlots) {
       const d = new Date(slot.scheduledAtUtc);
       const day = this.calendarDays.find(
         (x) =>
@@ -203,4 +209,10 @@ export class SchedulingCalendarComponent {
       }
     }
   }
+
+  readonly postStatusClass = postStatusClass;
+  readonly postStatusLabel = postStatusLabel;
+  readonly platformBadgeClass = platformBadgeClass;
+  readonly platformIcon = platformIcon;
+  readonly platformLabel = platformLabel;
 }

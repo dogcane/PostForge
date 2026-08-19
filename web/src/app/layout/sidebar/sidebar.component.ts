@@ -1,11 +1,13 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Component, EventEmitter, Input, Output, computed, inject } from '@angular/core';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, MatIconModule],
+  imports: [CommonModule, RouterLink, RouterLinkActive, MatIconModule],
   template: `
     <aside class="pf-sidebar" [class.open]="open">
       <div class="pf-sidebar__glow"></div>
@@ -39,6 +41,10 @@ import { MatIconModule } from '@angular/material/icon';
             <mat-icon>calendar_month</mat-icon>
             <span>Editorial Calendar</span>
           </a>
+          <a class="pf-nav__item" routerLink="/tenants" routerLinkActive="active" (click)="close.emit()" *ngIf="isSuperUser()">
+            <mat-icon>domain</mat-icon>
+            <span>Tenants</span>
+          </a>
         </nav>
 
         <p class="pf-sidebar__label">Tools</p>
@@ -51,12 +57,14 @@ import { MatIconModule } from '@angular/material/icon';
 
         <div class="pf-sidebar__footer">
           <div class="pf-user">
-            <div class="pf-avatar">A</div>
+            <div class="pf-avatar">{{ initials() }}</div>
             <div class="pf-user__meta">
-              <span class="pf-user__name">Admin</span>
-              <span class="pf-user__role">Workspace</span>
+              <span class="pf-user__name">{{ userEmail() }}</span>
+              <span class="pf-user__role">{{ tenantLabel() }}</span>
             </div>
-            <mat-icon class="pf-user__gear">settings</mat-icon>
+            <button class="pf-user__gear" (click)="logout()" aria-label="Sign out">
+              <mat-icon>logout</mat-icon>
+            </button>
           </div>
         </div>
       </div>
@@ -66,4 +74,23 @@ import { MatIconModule } from '@angular/material/icon';
 export class SidebarComponent {
   @Input() open = false;
   @Output() close = new EventEmitter<void>();
+
+  readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+
+  readonly isSuperUser = computed(() => this.auth.isSuperUser());
+  readonly userEmail = computed(() => this.auth.currentUser()?.email ?? 'Account');
+  readonly initials = computed(() => (this.auth.currentUser()?.email ?? 'A').charAt(0).toUpperCase());
+  readonly tenantLabel = computed(() => {
+    const tenant = this.auth.activeTenant();
+    if (tenant) {
+      return tenant.name;
+    }
+    return this.auth.isSuperUser() ? 'Super admin' : 'No workspace';
+  });
+
+  logout(): void {
+    this.auth.logout();
+    this.router.navigate(['/login']);
+  }
 }

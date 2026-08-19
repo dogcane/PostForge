@@ -5,6 +5,7 @@ using PostForge.Application.Scheduling.Commands.MarkSlotFailed;
 using PostForge.Application.Scheduling.Commands.MarkSlotPublished;
 using PostForge.Application.Scheduling.Commands.SchedulePost;
 using PostForge.Application.Scheduling.DTOs;
+using PostForge.Application.Scheduling.Queries.GetCalendarSlots;
 using PostForge.Application.Scheduling.Queries.GetPendingSlots;
 using PostForge.Application.Scheduling.Queries.GetSlotsByPostId;
 
@@ -50,6 +51,20 @@ public class SchedulingController : ControllerBase
     public async Task<ActionResult<List<ScheduleSlotDto>>> GetPending()
     {
         var slots = await _mediator.Send(new GetPendingSlotsQuery());
+        return Ok(slots);
+    }
+
+    [HttpGet("calendar")]
+    public async Task<ActionResult<List<ScheduleSlotDto>>> GetCalendar(
+        [FromQuery] DateTime start,
+        [FromQuery] DateTime end)
+    {
+        if (start >= end)
+            return BadRequest("Start must be before end.");
+
+        var slots = await _mediator.Send(new GetCalendarSlotsQuery(
+            DateTime.SpecifyKind(start, DateTimeKind.Utc),
+            DateTime.SpecifyKind(end, DateTimeKind.Utc)));
         return Ok(slots);
     }
 

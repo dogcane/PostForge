@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { HeaderComponent } from '../header/header.component';
 import { SidebarComponent } from '../sidebar/sidebar.component';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -23,8 +24,18 @@ import { SidebarComponent } from '../sidebar/sidebar.component';
     </div>
   `
 })
-export class MainLayoutComponent {
+export class MainLayoutComponent implements OnInit {
   sidebarOpen = false;
+
+  constructor(private auth: AuthService) {}
+
+  ngOnInit(): void {
+    this.auth.loadCurrentUser().subscribe({
+      error: () => {
+        // The interceptor handles 401 by clearing the session and redirecting to login.
+      }
+    });
+  }
 
   toggleSidebar(): void {
     this.sidebarOpen = !this.sidebarOpen;

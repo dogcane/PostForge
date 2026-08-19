@@ -7,6 +7,10 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { finalize } from 'rxjs';
+import { CaptionResult, ImageResult } from '../../../models/ai.model';
+import { PLATFORM_OPTIONS } from '../../../models/platform.model';
+import { ApiService } from '../../../services/api.service';
 
 @Component({
   selector: 'app-ai-assist',
@@ -29,6 +33,8 @@ import { MatIconModule } from '@angular/material/icon';
           <p class="pf-subtitle">Generate or polish your content with your own AI providers</p>
         </div>
       </div>
+
+      <div class="pf-alert" *ngIf="error">{{ error }}</div>
 
       <div class="pf-grid pf-grid--ai">
         <mat-card class="pf-card pf-ai-card">
@@ -58,20 +64,28 @@ import { MatIconModule } from '@angular/material/icon';
           </mat-form-field>
 
           <mat-form-field appearance="outline">
-            <mat-label>AI provider</mat-label>
-            <mat-select [(ngModel)]="selectedTextProvider">
-              <mat-option value="openai">OpenAI</mat-option>
-              <mat-option value="anthropic">Anthropic</mat-option>
-              <mat-option value="gemini">Google Gemini</mat-option>
-              <mat-option value="foundry">Microsoft Foundry</mat-option>
+            <mat-label>Platform constraints (optional)</mat-label>
+            <mat-select [(ngModel)]="selectedPlatform">
+              <mat-option [value]="null">Generic</mat-option>
+              <mat-option *ngFor="let p of platforms" [value]="p.key">{{ p.label }}</mat-option>
             </mat-select>
           </mat-form-field>
 
           <div class="pf-ai-card__actions">
-            <button mat-flat-button class="pf-btn-primary" (click)="generateCaption()" [disabled]="!captionBrief">
-              <mat-icon>auto_awesome</mat-icon>
+            <button mat-flat-button class="pf-btn-primary" (click)="generateCaption()" [disabled]="captionLoading || !captionBrief.trim()">
+              <mat-icon>{{ captionLoading ? 'hourglass_top' : 'auto_awesome' }}</mat-icon>
               Generate caption
             </button>
+          </div>
+
+          <div class="pf-ai-result" *ngIf="captionResult">
+            <p>{{ captionResult.caption }}</p>
+            <div class="pf-ai-result__actions">
+              <button mat-button (click)="copyCaption()">
+                <mat-icon>content_copy</mat-icon>
+                Copy
+              </button>
+            </div>
           </div>
         </mat-card>
 
@@ -92,67 +106,98 @@ import { MatIconModule } from '@angular/material/icon';
           </mat-form-field>
 
           <mat-form-field appearance="outline">
-            <mat-label>AI provider</mat-label>
-            <mat-select [(ngModel)]="selectedImageProvider">
-              <mat-option value="openai">OpenAI (DALL-E)</mat-option>
-              <mat-option value="foundry">Microsoft Foundry</mat-option>
-            </mat-select>
+            <mat-label>Style (optional)</mat-label>
+            <input matInput [(ngModel)]="imageStyle" placeholder="e.g. minimal, neon, editorial" />
           </mat-form-field>
 
           <div class="pf-ai-card__actions">
-            <button mat-flat-button class="pf-btn-primary" (click)="generateImage()" [disabled]="!imagePrompt">
-              <mat-icon>auto_awesome</mat-icon>
+            <button mat-flat-button class="pf-btn-primary" (click)="generateImage()" [disabled]="imageLoading || !imagePrompt.trim()">
+              <mat-icon>{{ imageLoading ? 'hourglass_top' : 'auto_awesome' }}</mat-icon>
               Generate image
             </button>
           </div>
+
+          <div class="pf-ai-image" *ngIf="imageResult">
+            <img [src]="imageResult.blobUri" alt="Generated image" />
+            <div class="pf-ai-result__actions">
+              <a mat-button [href]="imageResult.blobUri" target="_blank" rel="noopener">
+                <mat-icon>open_in_new</mat-icon>
+                Open
+              </a>
+            </div>
+          </div>
         </mat-card>
       </div>
-
-      <mat-card class="pf-card pf-result" *ngIf="generatedContent">
-        <div class="pf-result__head">
-          <mat-icon>check_circle</mat-icon>
-          Generated content
-        </div>
-        <p class="pf-result__text">{{ generatedContent }}</p>
-        <div class="pf-form-actions" style="padding:0">
-          <button mat-button (click)="copyContent()">
-            <mat-icon>content_copy</mat-icon>
-            Copy
-          </button>
-          <button mat-flat-button class="pf-btn-primary">
-            <mat-icon>add</mat-icon>
-            Use in New Post
-          </button>
-        </div>
-      </mat-card>
     </div>
   `
 })
 export class AiAssistComponent {
   captionBrief = '';
   selectedTone = 'professional';
-  selectedTextProvider = 'openai';
+  selectedPlatform: string | null = null;
+  captionLoading = false;
+  captionResult: CaptionResult | null = null;
+
   imagePrompt = '';
-  selectedImageProvider = 'openai';
-  generatedContent: string | null = null;
+  imageStyle = '';
+  imageLoading = false;
+  imageResult: ImageResult | null = null;
+
+  error: string | null = null;
+  platforms = PLATFORM_OPTIONS;
+
+  constructor(private api: ApiService) {}
 
   generateCaption(): void {
-    this.generatedContent =
-      'Generated caption based on your brief with a ' +
-      this.selectedTone +
-      ' tone using ' +
-      this.selectedTextProvider +
-      '.';
+    if (this.captionLoading || !this.captionBrief.trim()) {
+      return;
+    }
+    this.captionLoading = true;
+    this.error = null;
+    this.api
+      .generateCaption({
+        brief: this.captionBrief.trim(),
+        tone: this.selectedTone,
+        platform: this.selectedPlatform ?? undefined
+      })
+      .pipe(finalize(() => (this.captionLoading = false)))
+      .subscribe({
+        next: (result) => {
+          this.captionResult = result;
+          this.imageResult = null;
+        },
+        error: () => {
+          this.error = 'Unable to generate the caption. Check that your AI provider is configured.';
+        }
+      });
   }
 
   generateImage(): void {
-    this.generatedContent =
-      'Image will be generated from your prompt using ' + this.selectedImageProvider + '.';
+    if (this.imageLoading || !this.imagePrompt.trim()) {
+      return;
+    }
+    this.imageLoading = true;
+    this.error = null;
+    this.api
+      .generateImage({
+        prompt: this.imagePrompt.trim(),
+        style: this.imageStyle.trim() || undefined
+      })
+      .pipe(finalize(() => (this.imageLoading = false)))
+      .subscribe({
+        next: (result) => {
+          this.imageResult = result;
+          this.captionResult = null;
+        },
+        error: () => {
+          this.error = 'Unable to generate the image. Check that your AI provider is configured.';
+        }
+      });
   }
 
-  copyContent(): void {
-    if (this.generatedContent) {
-      navigator.clipboard.writeText(this.generatedContent);
+  copyCaption(): void {
+    if (this.captionResult?.caption) {
+      navigator.clipboard.writeText(this.captionResult.caption);
     }
   }
 }

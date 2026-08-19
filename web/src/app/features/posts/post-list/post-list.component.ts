@@ -1,9 +1,17 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { Post, PostStatus, PostTag, PostTagType } from '../../../models/post.model';
+import {
+  Post,
+  postStatusClass,
+  postStatusLabel,
+  postTagIcon,
+  postTagTypeLabel
+} from '../../../models/post.model';
+import { platformBadgeClass, platformIcon, platformLabel } from '../../../models/platform.model';
+import { ApiService } from '../../../services/api.service';
 
 @Component({
   selector: 'app-post-list',
@@ -22,31 +30,44 @@ import { Post, PostStatus, PostTag, PostTagType } from '../../../models/post.mod
         </a>
       </div>
 
-      <ng-container *ngIf="posts.length; else empty">
-        <div class="pf-grid pf-grid--posts">
-          <article class="pf-card pf-card--hover post-card" *ngFor="let post of posts">
-            <div class="post-card__head">
-              <span class="pf-status" [class]="statusClass(post.status)">{{ post.status }}</span>
-              <span class="post-card__date">{{ post.createdAt | date: 'MMM d' }}</span>
-              <button mat-icon-button class="post-card__edit" [routerLink]="['/posts', post.id]" aria-label="Edit post">
-                <mat-icon>edit</mat-icon>
-              </button>
-            </div>
-            <p class="post-card__text">{{ post.text }}</p>
-            <div class="post-card__platforms">
-              <span class="pf-badge" *ngFor="let p of post.targetPlatforms" [class]="'pf-badge--' + p.toLowerCase()">
-                <mat-icon>{{ platformIcon(p) }}</mat-icon>
-                {{ platformLabel(p) }}
-              </span>
-            </div>
-            <div class="post-card__tags" *ngIf="post.tags.length">
-              <span class="pf-tag" *ngFor="let tag of post.tags">
-                <mat-icon>{{ tagIcon(tag.tagType) }}</mat-icon>
-                @{{ tag.username }} · {{ tagLabel(tag.tagType) }}
-              </span>
-            </div>
-          </article>
-        </div>
+      <div class="pf-alert" *ngIf="error">{{ error }}</div>
+
+      <ng-container *ngIf="!loading; else loadingState">
+        <ng-container *ngIf="posts.length; else empty">
+          <div class="pf-grid pf-grid--posts">
+            <article class="pf-card pf-card--hover post-card" *ngFor="let post of posts">
+              <div class="post-card__head">
+                <span class="pf-status" [class]="postStatusClass(post.status)">{{ postStatusLabel(post.status) }}</span>
+                <span class="post-card__date">{{ post.createdAtUtc | date: 'MMM d' }}</span>
+                <button mat-icon-button class="post-card__edit" [routerLink]="['/posts', post.id]" aria-label="Edit post">
+                  <mat-icon>edit</mat-icon>
+                </button>
+              </div>
+              <p class="post-card__text">{{ post.text }}</p>
+              <div class="post-card__platforms">
+                <span class="pf-badge" *ngFor="let p of post.targetPlatforms" [class]="platformBadgeClass(p)">
+                  <mat-icon>{{ platformIcon(p) }}</mat-icon>
+                  {{ platformLabel(p) }}
+                </span>
+              </div>
+              <div class="post-card__tags" *ngIf="post.tags.length">
+                <span class="pf-tag" *ngFor="let tag of post.tags">
+                  <mat-icon>{{ postTagIcon(tag.tagType) }}</mat-icon>
+                  @{{ tag.username }} · {{ postTagTypeLabel(tag.tagType) }}
+                </span>
+              </div>
+              <div class="post-card__foot">
+                <a mat-stroked-button class="pf-btn-schedule" [routerLink]="['/scheduling']">
+                  <mat-icon>schedule</mat-icon>
+                  Schedule
+                </a>
+                <button mat-icon-button class="post-card__delete" (click)="deletePost(post)" aria-label="Delete post">
+                  <mat-icon>delete_outline</mat-icon>
+                </button>
+              </div>
+            </article>
+          </div>
+        </ng-container>
       </ng-container>
 
       <ng-template #empty>
@@ -60,85 +81,56 @@ import { Post, PostStatus, PostTag, PostTagType } from '../../../models/post.mod
           </a>
         </div>
       </ng-template>
+
+      <ng-template #loadingState>
+        <div class="pf-loading"><mat-icon>autorenew</mat-icon> Loading posts...</div>
+      </ng-template>
     </div>
   `
 })
-export class PostListComponent {
-  posts: Post[] = [
-    {
-      id: '1',
-      text: 'The future of content is not just created — it is forged. Discover how PostForge turns a single idea into a cross-platform launch. #PostForge',
-      mediaAssets: [],
-      targetPlatforms: ['facebook', 'instagram'],
-      tags: [
-        { platform: 'facebook', tagType: PostTagType.Collaborator, username: 'silvia.neri' },
-        { platform: 'instagram', tagType: PostTagType.Mention, username: 'marco.rossi' }
-      ],
-      status: PostStatus.Scheduled,
-      createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-      updatedAt: new Date().toISOString()
-    },
-    {
-      id: '2',
-      text: 'We just shipped AI caption generation. Describe the vibe, pick the tone, and let the machine do the heavy lifting for your next campaign.',
-      mediaAssets: [],
-      targetPlatforms: ['youtube', 'tiktok'],
-      tags: [],
-      status: PostStatus.Published,
-      createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
-      updatedAt: new Date().toISOString()
-    },
-    {
-      id: '3',
-      text: 'Campaign planning just got a lot easier. Group posts under a goal, set your channels, and keep the whole team aligned on one calendar.',
-      mediaAssets: [],
-      targetPlatforms: ['facebook'],
-      tags: [],
-      status: PostStatus.Draft,
-      createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
-      updatedAt: new Date().toISOString()
-    }
-  ];
+export class PostListComponent implements OnInit {
+  posts: Post[] = [];
+  loading = false;
+  error: string | null = null;
 
-  statusClass(status: PostStatus): string {
-    return 'pf-status--' + status.toLowerCase();
+  constructor(private api: ApiService) {}
+
+  ngOnInit(): void {
+    this.load();
   }
 
-  platformIcon(platform: string): string {
-    switch (platform.toLowerCase()) {
-      case 'facebook': return 'thumb_up';
-      case 'instagram': return 'photo_camera';
-      case 'tiktok': return 'music_note';
-      case 'youtube': return 'play_circle';
-      default: return 'language';
-    }
+  private load(): void {
+    this.loading = true;
+    this.error = null;
+    this.api.getPosts().subscribe({
+      next: (posts) => {
+        this.posts = posts;
+        this.loading = false;
+      },
+      error: () => {
+        this.error = 'Unable to load posts.';
+        this.loading = false;
+      }
+    });
   }
 
-  platformLabel(platform: string): string {
-    switch (platform.toLowerCase()) {
-      case 'facebook': return 'Facebook';
-      case 'instagram': return 'Instagram';
-      case 'tiktok': return 'TikTok';
-      case 'youtube': return 'YouTube';
-      default: return platform;
+  deletePost(post: Post): void {
+    if (!confirm(`Delete this post? This cannot be undone.`)) {
+      return;
     }
+    this.api.deletePost(post.id).subscribe({
+      next: () => this.load(),
+      error: () => {
+        this.error = 'Unable to delete the post.';
+      }
+    });
   }
 
-  tagIcon(tagType: PostTagType): string {
-    switch (tagType) {
-      case PostTagType.Mention: return 'alternate_email';
-      case PostTagType.UserTag: return 'person_pin';
-      case PostTagType.Collaborator: return 'group';
-      default: return 'person';
-    }
-  }
-
-  tagLabel(tagType: PostTagType): string {
-    switch (tagType) {
-      case PostTagType.Mention: return 'Mention';
-      case PostTagType.UserTag: return 'Tag on photo';
-      case PostTagType.Collaborator: return 'Collaborator';
-      default: return tagType;
-    }
-  }
+  readonly postStatusClass = postStatusClass;
+  readonly postStatusLabel = postStatusLabel;
+  readonly postTagIcon = postTagIcon;
+  readonly postTagTypeLabel = postTagTypeLabel;
+  readonly platformBadgeClass = platformBadgeClass;
+  readonly platformIcon = platformIcon;
+  readonly platformLabel = platformLabel;
 }
