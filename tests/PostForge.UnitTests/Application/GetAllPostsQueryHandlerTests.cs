@@ -1,6 +1,4 @@
-using AutoMapper;
 using FluentAssertions;
-using NSubstitute;
 using PostForge.Application.Posts.DTOs;
 using PostForge.Application.Posts.Queries.GetAllPosts;
 using PostForge.Domain.Entities;
@@ -11,40 +9,16 @@ namespace PostForge.UnitTests.Application;
 
 public class GetAllPostsQueryHandlerTests : HandlerTestBase
 {
-    private readonly IMapper _mapper;
-
-    public GetAllPostsQueryHandlerTests()
-    {
-        _mapper = Substitute.For<IMapper>();
-        _mapper.Map<List<PostDto>>(Arg.Any<List<Post>>())
-            .Returns(args =>
-            {
-                var posts = (List<Post>)args[0]!;
-                return posts.Select(p => new PostDto
-                {
-                    Id = p.Id,
-                    Text = p.Text,
-                    MediaAssets = p.MediaAssets.ToList(),
-                    TargetPlatforms = p.TargetPlatforms.ToList(),
-                    Tags = p.Tags.Select(t => new PostTagDto(t.Platform, t.TagType, t.Username)).ToList(),
-                    CampaignId = p.CampaignId,
-                    Status = p.Status,
-                    CreatedAtUtc = p.CreatedAtUtc,
-                    UpdatedAtUtc = p.UpdatedAtUtc
-                }).ToList();
-            });
-    }
-
     [Fact]
     public async Task Handle_ShouldReturnAllPostsWhenNoFilter()
     {
         var ctx = ((PostRepository)PostRepository).DbContext;
-        ctx.Set<Post>().Add(Post.Create("Post 1").Value!);
-        ctx.Set<Post>().Add(Post.Create("Post 2").Value!);
-        ctx.Set<Post>().Add(Post.Create("Post 3").Value!);
+        ctx.Set<Post>().Add(Post.Create("Post 1", TenantId).Value!);
+        ctx.Set<Post>().Add(Post.Create("Post 2", TenantId).Value!);
+        ctx.Set<Post>().Add(Post.Create("Post 3", TenantId).Value!);
         await ctx.SaveChangesAsync(CancellationToken.None);
 
-        var handler = new GetAllPostsHandler(PostRepository, _mapper);
+        var handler = new GetAllPostsHandler(PostRepository);
         var query = new GetAllPostsQuery(null, null, null, null);
 
         var result = await handler.Handle(query, CancellationToken.None);
@@ -55,15 +29,15 @@ public class GetAllPostsQueryHandlerTests : HandlerTestBase
     [Fact]
     public async Task Handle_ShouldFilterByStatus()
     {
-        var draftPost = Post.Create("Draft post").Value!;
-        var readyPost = Post.Create("Ready post").Value!;
+        var draftPost = Post.Create("Draft post", TenantId).Value!;
+        var readyPost = Post.Create("Ready post", TenantId).Value!;
         readyPost.SetStatus(PostStatus.Ready);
         var ctx = ((PostRepository)PostRepository).DbContext;
         ctx.Set<Post>().Add(draftPost);
         ctx.Set<Post>().Add(readyPost);
         await ctx.SaveChangesAsync(CancellationToken.None);
 
-        var handler = new GetAllPostsHandler(PostRepository, _mapper);
+        var handler = new GetAllPostsHandler(PostRepository);
         var query = new GetAllPostsQuery(PostStatus.Draft, null, null, null);
 
         var result = await handler.Handle(query, CancellationToken.None);
@@ -74,16 +48,16 @@ public class GetAllPostsQueryHandlerTests : HandlerTestBase
     [Fact]
     public async Task Handle_ShouldFilterByPlatform()
     {
-        var fbPost = Post.Create("Facebook post").Value!;
+        var fbPost = Post.Create("Facebook post", TenantId).Value!;
         fbPost.ScheduleForPlatform("FACEBOOK");
-        var igPost = Post.Create("Instagram post").Value!;
+        var igPost = Post.Create("Instagram post", TenantId).Value!;
         igPost.ScheduleForPlatform("INSTAGRAM");
         var ctx = ((PostRepository)PostRepository).DbContext;
         ctx.Set<Post>().Add(fbPost);
         ctx.Set<Post>().Add(igPost);
         await ctx.SaveChangesAsync(CancellationToken.None);
 
-        var handler = new GetAllPostsHandler(PostRepository, _mapper);
+        var handler = new GetAllPostsHandler(PostRepository);
         var query = new GetAllPostsQuery(null, "FACEBOOK", null, null);
 
         var result = await handler.Handle(query, CancellationToken.None);
@@ -94,8 +68,8 @@ public class GetAllPostsQueryHandlerTests : HandlerTestBase
     [Fact]
     public async Task Handle_ShouldFilterByDateFrom()
     {
-        var oldPost = Post.Create("Old post").Value!;
-        var newPost = Post.Create("New post").Value!;
+        var oldPost = Post.Create("Old post", TenantId).Value!;
+        var newPost = Post.Create("New post", TenantId).Value!;
         var ctx = ((PostRepository)PostRepository).DbContext;
         ctx.Set<Post>().Add(oldPost);
         ctx.Set<Post>().Add(newPost);
@@ -107,7 +81,7 @@ public class GetAllPostsQueryHandlerTests : HandlerTestBase
             new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         await ctx.SaveChangesAsync(CancellationToken.None);
 
-        var handler = new GetAllPostsHandler(PostRepository, _mapper);
+        var handler = new GetAllPostsHandler(PostRepository);
         var query = new GetAllPostsQuery(null, null, new DateTime(2024, 6, 1, 0, 0, 0, DateTimeKind.Utc), null);
 
         var result = await handler.Handle(query, CancellationToken.None);
@@ -118,8 +92,8 @@ public class GetAllPostsQueryHandlerTests : HandlerTestBase
     [Fact]
     public async Task Handle_ShouldFilterByDateTo()
     {
-        var oldPost = Post.Create("Old post").Value!;
-        var newPost = Post.Create("New post").Value!;
+        var oldPost = Post.Create("Old post", TenantId).Value!;
+        var newPost = Post.Create("New post", TenantId).Value!;
         var ctx = ((PostRepository)PostRepository).DbContext;
         ctx.Set<Post>().Add(oldPost);
         ctx.Set<Post>().Add(newPost);
@@ -131,7 +105,7 @@ public class GetAllPostsQueryHandlerTests : HandlerTestBase
             new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         await ctx.SaveChangesAsync(CancellationToken.None);
 
-        var handler = new GetAllPostsHandler(PostRepository, _mapper);
+        var handler = new GetAllPostsHandler(PostRepository);
         var query = new GetAllPostsQuery(null, null, null, new DateTime(2024, 6, 1, 0, 0, 0, DateTimeKind.Utc));
 
         var result = await handler.Handle(query, CancellationToken.None);
@@ -139,14 +113,14 @@ public class GetAllPostsQueryHandlerTests : HandlerTestBase
         result.Should().ContainSingle().Which.Id.Should().Be(oldPost.Id);
     }
 
-    [Fact]
+[Fact]
     public async Task Handle_ShouldReturnEmptyListWhenNoMatches()
     {
         var ctx = ((PostRepository)PostRepository).DbContext;
-        ctx.Set<Post>().Add(Post.Create("Post").Value!);
+        ctx.Set<Post>().Add(Post.Create("Post", TenantId).Value!);
         await ctx.SaveChangesAsync(CancellationToken.None);
 
-        var handler = new GetAllPostsHandler(PostRepository, _mapper);
+        var handler = new GetAllPostsHandler(PostRepository);
         var query = new GetAllPostsQuery(PostStatus.Published, null, null, null);
 
         var result = await handler.Handle(query, CancellationToken.None);
@@ -155,15 +129,31 @@ public class GetAllPostsQueryHandlerTests : HandlerTestBase
     }
 
     [Fact]
+    public async Task Handle_ShouldNotReturnPostsFromOtherTenants()
+    {
+        var ctx = ((PostRepository)PostRepository).DbContext;
+        ctx.Set<Post>().Add(Post.Create("My tenant post", TenantId).Value!);
+        ctx.Set<Post>().Add(Post.Create("Other tenant post", Guid.NewGuid()).Value!);
+        await ctx.SaveChangesAsync(CancellationToken.None);
+
+        var handler = new GetAllPostsHandler(PostRepository);
+        var query = new GetAllPostsQuery(null, null, null, null);
+
+        var result = await handler.Handle(query, CancellationToken.None);
+
+        result.Should().ContainSingle().Which.Text.Should().Be("My tenant post");
+    }
+
+    [Fact]
     public async Task Handle_ShouldMapToPostDto()
     {
-        var post = Post.Create("Test content").Value!;
+        var post = Post.Create("Test content", TenantId).Value!;
         post.ScheduleForPlatform("TIKTOK");
         var ctx = ((PostRepository)PostRepository).DbContext;
         ctx.Set<Post>().Add(post);
         await ctx.SaveChangesAsync(CancellationToken.None);
 
-        var handler = new GetAllPostsHandler(PostRepository, _mapper);
+        var handler = new GetAllPostsHandler(PostRepository);
         var query = new GetAllPostsQuery(null, null, null, null);
 
         var result = await handler.Handle(query, CancellationToken.None);
@@ -178,14 +168,14 @@ public class GetAllPostsQueryHandlerTests : HandlerTestBase
     [Fact]
     public async Task Handle_ShouldMapTagsToDto()
     {
-        var post = Post.Create("Test content").Value!;
+        var post = Post.Create("Test content", TenantId).Value!;
         post.ScheduleForPlatform("FACEBOOK");
         post.AddTag(PostTag.Create("FACEBOOK", PostTagType.Collaborator, "silvia.neri").Value!);
         var ctx = ((PostRepository)PostRepository).DbContext;
         ctx.Set<Post>().Add(post);
         await ctx.SaveChangesAsync(CancellationToken.None);
 
-        var handler = new GetAllPostsHandler(PostRepository, _mapper);
+        var handler = new GetAllPostsHandler(PostRepository);
         var query = new GetAllPostsQuery(null, null, null, null);
 
         var result = await handler.Handle(query, CancellationToken.None);

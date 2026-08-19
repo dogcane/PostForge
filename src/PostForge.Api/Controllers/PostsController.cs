@@ -1,4 +1,5 @@
 using Mediator;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PostForge.Application.Posts.Commands.ChangePostStatus;
 using PostForge.Application.Posts.Commands.CreatePost;
@@ -12,6 +13,7 @@ using PostForge.Domain.ValueObjects;
 namespace PostForge.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/v1/posts")]
 public class PostsController : ControllerBase
 {

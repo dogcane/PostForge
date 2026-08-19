@@ -1,11 +1,10 @@
 using ECO.Data;
-using ECO.Providers.EntityFramework;
-using PostForge.Domain.Interfaces;
 using PostForge.Domain.Entities;
+using PostForge.Domain.Interfaces;
 
 namespace PostForge.Infrastructure.DAL.Repositories;
 
-public class CampaignRepository : EntityFrameworkRepository<Campaign, Guid>, ICampaignRepository
+public class CampaignRepository : TenantScopedRepository<Campaign, Guid>, ICampaignRepository
 {
-    public CampaignRepository(IDataContext dataContext) : base(dataContext) { }
+    public CampaignRepository(IDataContext dataContext, ITenantContext tenantContext) : base(dataContext, tenantContext) { }
 }

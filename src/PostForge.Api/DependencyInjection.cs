@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PostForge.Infrastructure.DAL;
+using PostForge.Infrastructure.Identity;
 using PostForge.Infrastructure.Messaging.ServiceBus;
 using PostForge.Infrastructure.Providers;
 using PostForge.Providers.Anthropic;
@@ -21,6 +22,7 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDataAccess(configuration);
+        services.AddIdentityInfrastructure(configuration);
 
         RegisterSocialProviders(services, configuration);
         RegisterAiProviders(services);

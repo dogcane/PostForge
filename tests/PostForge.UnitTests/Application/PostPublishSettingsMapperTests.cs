@@ -8,10 +8,12 @@ namespace PostForge.UnitTests.Application;
 
 public class PostPublishSettingsMapperTests
 {
+    private static readonly Guid TenantId = Guid.NewGuid();
+
     [Fact]
     public void ToPublishSettings_ShouldPartitionTagsByTypeForPlatform()
     {
-        var post = Post.Create("Test content").Value!;
+        var post = Post.Create("Test content", TenantId).Value!;
         post.ScheduleForPlatform("FACEBOOK");
         post.ScheduleForPlatform("INSTAGRAM");
         post.AddTag(PostTag.Create("FACEBOOK", PostTagType.Mention, "marco.rossi").Value!);
@@ -30,7 +32,7 @@ public class PostPublishSettingsMapperTests
     [Fact]
     public void ToPublishSettings_WithoutTags_ShouldReturnEmptyLists()
     {
-        var post = Post.Create("Test content").Value!;
+        var post = Post.Create("Test content", TenantId).Value!;
         post.ScheduleForPlatform("FACEBOOK");
 
         var settings = post.ToPublishSettings("FACEBOOK");

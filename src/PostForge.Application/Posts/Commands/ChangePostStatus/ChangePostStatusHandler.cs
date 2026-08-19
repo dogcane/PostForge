@@ -1,5 +1,6 @@
 using ECO.Data;
 using Mediator;
+using PostForge.Application.Common.Extensions;
 using PostForge.Domain.Interfaces;
 
 namespace PostForge.Application.Posts.Commands.ChangePostStatus;
@@ -13,10 +14,7 @@ public class ChangePostStatusHandler(
         var post = await postRepository.LoadAsync(request.PostId)
             ?? throw new KeyNotFoundException($"Post with Id {request.PostId} was not found.");
 
-        var result = post.SetStatus(request.NewStatus);
-        if (!result.Success)
-            throw new InvalidOperationException(
-                string.Join("; ", result.Errors.Select(e => $"{e.Context}: {e.Description}")));
+        post.SetStatus(request.NewStatus).EnsureSuccess();
 
         postRepository.Update(post);
         await dataContext.SaveChangesAsync(cancellationToken);

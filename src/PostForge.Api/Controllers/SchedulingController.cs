@@ -1,4 +1,5 @@
 using Mediator;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PostForge.Application.Scheduling.Commands.MarkSlotFailed;
 using PostForge.Application.Scheduling.Commands.MarkSlotPublished;
@@ -10,6 +11,7 @@ using PostForge.Application.Scheduling.Queries.GetSlotsByPostId;
 namespace PostForge.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/v1/scheduling")]
 public class SchedulingController : ControllerBase
 {

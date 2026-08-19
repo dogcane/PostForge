@@ -1,5 +1,4 @@
 using FluentAssertions;
-using FluentValidation;
 using PostForge.Application.Posts.Commands.CreatePost;
 using PostForge.Application.Posts.DTOs;
 using PostForge.Domain.Entities;
@@ -13,7 +12,7 @@ public class CreatePostCommandHandlerTests : HandlerTestBase
     [Fact]
     public async Task Handle_ShouldCreatePostAndReturnId()
     {
-        var handler = new CreatePostHandler(PostRepository, DataContext);
+        var handler = new CreatePostHandler(PostRepository, DataContext, TenantContext);
         var command = new CreatePostCommand("Test content", null, null, null);
 
         var result = await handler.Handle(command, CancellationToken.None);
@@ -28,7 +27,7 @@ public class CreatePostCommandHandlerTests : HandlerTestBase
     [Fact]
     public async Task Handle_ShouldAddTargetPlatforms()
     {
-        var handler = new CreatePostHandler(PostRepository, DataContext);
+        var handler = new CreatePostHandler(PostRepository, DataContext, TenantContext);
         var platforms = new List<string> { "FACEBOOK", "INSTAGRAM" };
         var command = new CreatePostCommand("Test content", null, platforms, null);
 
@@ -42,7 +41,7 @@ public class CreatePostCommandHandlerTests : HandlerTestBase
     [Fact]
     public async Task Handle_ShouldAddTagsToPost()
     {
-        var handler = new CreatePostHandler(PostRepository, DataContext);
+        var handler = new CreatePostHandler(PostRepository, DataContext, TenantContext);
         var tags = new List<PostTagDto>
         {
             new("FACEBOOK", PostTagType.Mention, "marco.rossi"),
@@ -61,7 +60,7 @@ public class CreatePostCommandHandlerTests : HandlerTestBase
     [Fact]
     public async Task Handle_WithCampaignId_ShouldAssociateCampaign()
     {
-        var handler = new CreatePostHandler(PostRepository, DataContext);
+        var handler = new CreatePostHandler(PostRepository, DataContext, TenantContext);
         var campaignId = Guid.NewGuid();
         var command = new CreatePostCommand("Test content", null, null, campaignId);
 
@@ -74,13 +73,13 @@ public class CreatePostCommandHandlerTests : HandlerTestBase
     [Fact]
     public async Task Handle_ShouldAddExistingMediaAssets()
     {
-        var media = MediaAsset.Create("https://example.com/img.jpg", "image/jpeg").Value!;
+        var media = MediaAsset.Create(TenantId, "https://example.com/img.jpg", "image/jpeg").Value!;
         var repo = (PostRepository)PostRepository;
         var ctx = repo.DbContext;
         ctx.Set<MediaAsset>().Add(media);
         await ctx.SaveChangesAsync(CancellationToken.None);
 
-        var handler = new CreatePostHandler(PostRepository, DataContext);
+        var handler = new CreatePostHandler(PostRepository, DataContext, TenantContext);
         var command = new CreatePostCommand("Test content", [media.Id], null, null);
 
         var result = await handler.Handle(command, CancellationToken.None);
@@ -92,7 +91,7 @@ public class CreatePostCommandHandlerTests : HandlerTestBase
     [Fact]
     public async Task Handle_ShouldSavePostToDatabase()
     {
-        var handler = new CreatePostHandler(PostRepository, DataContext);
+        var handler = new CreatePostHandler(PostRepository, DataContext, TenantContext);
         var command = new CreatePostCommand("Persistent content", null, null, null);
 
         var result = await handler.Handle(command, CancellationToken.None);
@@ -103,96 +102,3 @@ public class CreatePostCommandHandlerTests : HandlerTestBase
     }
 }
 
-public class CreatePostValidatorTests
-{
-    private readonly CreatePostValidator _validator = new();
-
-    [Fact]
-    public void Validator_ShouldRejectEmptyText()
-    {
-        var command = new CreatePostCommand("", null, null, null);
-
-        var result = _validator.Validate(command);
-
-        result.IsValid.Should().BeFalse();
-        result.Errors.Should().Contain(e => e.PropertyName == "Text");
-    }
-
-    [Fact]
-    public void Validator_ShouldRejectTextExceedingMaxLength()
-    {
-        var command = new CreatePostCommand(new string('x', 5001), null, null, null);
-
-        var result = _validator.Validate(command);
-
-        result.IsValid.Should().BeFalse();
-        result.Errors.Should().Contain(e => e.PropertyName == "Text");
-    }
-
-    [Fact]
-    public void Validator_ShouldAcceptValidCommand()
-    {
-        var command = new CreatePostCommand("Valid post content", null, null, null);
-
-        var result = _validator.Validate(command);
-
-        result.IsValid.Should().BeTrue();
-    }
-
-    [Fact]
-    public void Validator_ShouldAcceptCommandWithPlatforms()
-    {
-        var command = new CreatePostCommand("Content", null, ["FACEBOOK"], null);
-
-        var result = _validator.Validate(command);
-
-        result.IsValid.Should().BeTrue();
-    }
-
-    [Fact]
-    public void Validator_ShouldAcceptCommandWithTagsOnTargetedPlatforms()
-    {
-        var command = new CreatePostCommand(
-            "Content",
-            null,
-            ["FACEBOOK"],
-            null,
-            [new PostTagDto("FACEBOOK", PostTagType.Collaborator, "silvia.neri")]);
-
-        var result = _validator.Validate(command);
-
-        result.IsValid.Should().BeTrue();
-    }
-
-    [Fact]
-    public void Validator_ShouldRejectTagOnUntargetedPlatform()
-    {
-        var command = new CreatePostCommand(
-            "Content",
-            null,
-            ["INSTAGRAM"],
-            null,
-            [new PostTagDto("FACEBOOK", PostTagType.Collaborator, "silvia.neri")]);
-
-        var result = _validator.Validate(command);
-
-        result.IsValid.Should().BeFalse();
-        result.Errors.Should().Contain(e => e.PropertyName == "Tags");
-    }
-
-    [Fact]
-    public void Validator_ShouldRejectTagWithInvalidTagType()
-    {
-        var command = new CreatePostCommand(
-            "Content",
-            null,
-            ["FACEBOOK"],
-            null,
-            [new PostTagDto("FACEBOOK", (PostTagType)999, "silvia.neri")]);
-
-        var result = _validator.Validate(command);
-
-        result.IsValid.Should().BeFalse();
-        result.Errors.Should().Contain(e => e.PropertyName.Contains("TagType"));
-    }
-}

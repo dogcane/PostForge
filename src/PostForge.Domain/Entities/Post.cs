@@ -12,6 +12,7 @@ public class Post : AggregateRoot<Guid>
     private readonly List<PostTag> _tags = [];
 
     public Guid Id => Identity;
+    public Guid TenantId { get; private set; }
     public string Text { get; private set; }
     public IReadOnlyList<MediaAsset> MediaAssets => _mediaAssetsField.AsReadOnly();
     public IReadOnlyList<string> TargetPlatforms => _targetPlatformsField.AsReadOnly();
@@ -26,22 +27,25 @@ public class Post : AggregateRoot<Guid>
         Text = null!;
     }
 
-    private Post(string text, Guid? campaignId) : base(Guid.NewGuid())
+    private Post(string text, Guid tenantId, Guid? campaignId) : base(Guid.NewGuid())
     {
         Text = text;
+        TenantId = tenantId;
         CampaignId = campaignId;
         Status = PostStatus.Draft;
         CreatedAtUtc = DateTime.UtcNow;
         UpdatedAtUtc = DateTime.UtcNow;
     }
 
-    public static OperationResult<Post> Create(string text, Guid? campaignId = null)
+    public static OperationResult<Post> Create(string text, Guid tenantId, Guid? campaignId = null)
     {
         var result = OperationResult.MakeSuccess();
-        result.With(text, "Text").Required().StringLength(5000);
+        result
+            .With(text, "Text").Required().StringLength(5000)
+            .With(tenantId, "TenantId").Condition(v => v != Guid.Empty);
         if (!result.Success)
             return result;
-        return OperationResult<Post>.MakeSuccess(new Post(text, campaignId));
+        return OperationResult<Post>.MakeSuccess(new Post(text, tenantId, campaignId));
     }
 
     public OperationResult UpdateText(string text)

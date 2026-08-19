@@ -1,14 +1,13 @@
 using ECO.Data;
-using ECO.Providers.EntityFramework;
 using Microsoft.EntityFrameworkCore;
-using PostForge.Domain.Interfaces;
 using PostForge.Domain.Entities;
+using PostForge.Domain.Interfaces;
 
 namespace PostForge.Infrastructure.DAL.Repositories;
 
-public class PostRepository : EntityFrameworkRepository<Post, Guid>, IPostRepository
+public class PostRepository : TenantScopedRepository<Post, Guid>, IPostRepository
 {
-    public PostRepository(IDataContext dataContext) : base(dataContext) { }
+    public PostRepository(IDataContext dataContext, ITenantContext tenantContext) : base(dataContext, tenantContext) { }
 
     public async Task<List<MediaAsset>> GetMediaAssetsByIdsAsync(List<Guid> ids, CancellationToken ct)
     {

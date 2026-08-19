@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using PostForge.Domain.Interfaces;
 using PostForge.Infrastructure.DAL;
 using PostForge.Infrastructure.Messaging.ServiceBus;
 using PostForge.Infrastructure.Providers;
@@ -14,6 +15,8 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddWorkerInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddScoped<ITenantContext, SystemTenantContext>();
+
         services.AddDataAccess(configuration);
 
         services.AddFacebookProvider(configuration);

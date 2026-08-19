@@ -8,6 +8,7 @@ namespace PostForge.Domain.Entities;
 public class ScheduleSlot : AggregateRoot<Guid>
 {
     public Guid Id => Identity;
+    public Guid TenantId { get; private set; }
     public Guid PostId { get; private set; }
     public string Platform { get; private set; }
     public DateTime ScheduledAtUtc { get; private set; }
@@ -21,8 +22,9 @@ public class ScheduleSlot : AggregateRoot<Guid>
         Platform = null!;
     }
 
-    private ScheduleSlot(Guid postId, string platform, DateTime scheduledAtUtc) : base(Guid.NewGuid())
+    private ScheduleSlot(Guid tenantId, Guid postId, string platform, DateTime scheduledAtUtc) : base(Guid.NewGuid())
     {
+        TenantId = tenantId;
         PostId = postId;
         Platform = platform;
         ScheduledAtUtc = scheduledAtUtc;
@@ -30,17 +32,18 @@ public class ScheduleSlot : AggregateRoot<Guid>
         RetryCount = 0;
     }
 
-    public static OperationResult<ScheduleSlot> Create(Guid postId, string platform, DateTime scheduledAtUtc)
+    public static OperationResult<ScheduleSlot> Create(Guid tenantId, Guid postId, string platform, DateTime scheduledAtUtc)
     {
         var result = OperationResult.MakeSuccess();
         result
+            .With(tenantId, "TenantId").Condition(v => v != Guid.Empty)
             .With(postId, "PostId").Condition(v => v != Guid.Empty)
             .With(platform, "Platform").Required().StringLength(50)
             .With(scheduledAtUtc, "ScheduledAt").Condition(v => v != default)
             .With(scheduledAtUtc, "ScheduledAt").Condition(v => v.Kind == DateTimeKind.Utc);
         if (!result.Success)
             return result;
-        return OperationResult<ScheduleSlot>.MakeSuccess(new ScheduleSlot(postId, platform, scheduledAtUtc));
+        return OperationResult<ScheduleSlot>.MakeSuccess(new ScheduleSlot(tenantId, postId, platform, scheduledAtUtc));
     }
 
     public OperationResult MarkPublished()

@@ -12,7 +12,7 @@ public class UpdatePostCommandHandlerTests : HandlerTestBase
     [Fact]
     public async Task Handle_WithTags_ShouldReplaceExistingTags()
     {
-        var post = Post.Create("Original text").Value!;
+        var post = Post.Create("Original text", TenantId).Value!;
         post.ScheduleForPlatform("FACEBOOK");
         post.AddTag(PostTag.Create("FACEBOOK", PostTagType.Mention, "old.user").Value!);
         var ctx = ((PostRepository)PostRepository).DbContext;
@@ -39,7 +39,7 @@ public class UpdatePostCommandHandlerTests : HandlerTestBase
     [Fact]
     public async Task Handle_WithoutTags_ShouldKeepExistingTags()
     {
-        var post = Post.Create("Original text").Value!;
+        var post = Post.Create("Original text", TenantId).Value!;
         post.ScheduleForPlatform("FACEBOOK");
         post.AddTag(PostTag.Create("FACEBOOK", PostTagType.Mention, "keep.me").Value!);
         var ctx = ((PostRepository)PostRepository).DbContext;

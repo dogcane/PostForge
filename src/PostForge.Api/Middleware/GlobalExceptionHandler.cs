@@ -29,7 +29,7 @@ public class GlobalExceptionHandler : IMiddleware
     {
         var (statusCode, detail) = exception switch
         {
-            ValidationException => ((int)HttpStatusCode.BadRequest, "One or more validation failures have occurred."),
+            DomainValidationException => ((int)HttpStatusCode.BadRequest, "One or more domain validation failures have occurred."),
             KeyNotFoundException => ((int)HttpStatusCode.NotFound, exception.Message),
             UnauthorizedAccessException => ((int)HttpStatusCode.Unauthorized, "Unauthorized access."),
             _ => ((int)HttpStatusCode.InternalServerError, "An internal server error occurred.")
@@ -38,7 +38,7 @@ public class GlobalExceptionHandler : IMiddleware
         context.Response.ContentType = "application/problem+json";
         context.Response.StatusCode = statusCode;
 
-        var errors = exception is ValidationException validationEx
+        var errors = exception is DomainValidationException validationEx
             ? validationEx.Errors
             : null;
 

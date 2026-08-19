@@ -20,7 +20,7 @@ public static class DependencyInjection
                 ?? throw new InvalidOperationException("Connection string 'PostForgeDb' not found.");
 
             var dbContextOptions = new DbContextOptionsBuilder<PostForgeDbContext>()
-                .UseSqlServer(connectionString)
+                .UseNpgsql(connectionString)
                 .Options;
 
             var factory = new PersistenceUnitFactory();
@@ -34,6 +34,8 @@ public static class DependencyInjection
             unit.AddClass<ScheduleSlot, Guid>();
             unit.AddClass<SocialAccount, Guid>();
             unit.AddClass<ProviderCredential, Guid>();
+            unit.AddClass<Tenant, Guid>();
+            unit.AddClass<TenantMembership, Guid>();
 
             factory.AddPersistenceUnit(unit);
             return factory;
@@ -47,6 +49,8 @@ public static class DependencyInjection
         services.AddScoped<IScheduleSlotRepository, ScheduleSlotRepository>();
         services.AddScoped<ISocialAccountRepository, SocialAccountRepository>();
         services.AddScoped<IProviderCredentialRepository, ProviderCredentialRepository>();
+        services.AddScoped<ITenantRepository, TenantRepository>();
+        services.AddScoped<ITenantMembershipRepository, TenantMembershipRepository>();
 
         return services;
     }

@@ -1,11 +1,10 @@
 using ECO.Data;
-using ECO.Providers.EntityFramework;
-using PostForge.Domain.Interfaces;
 using PostForge.Domain.Entities;
+using PostForge.Domain.Interfaces;
 
 namespace PostForge.Infrastructure.DAL.Repositories;
 
-public class ProviderCredentialRepository : EntityFrameworkRepository<ProviderCredential, Guid>, IProviderCredentialRepository
+public class ProviderCredentialRepository : TenantScopedRepository<ProviderCredential, Guid>, IProviderCredentialRepository
 {
-    public ProviderCredentialRepository(IDataContext dataContext) : base(dataContext) { }
+    public ProviderCredentialRepository(IDataContext dataContext, ITenantContext tenantContext) : base(dataContext, tenantContext) { }
 }

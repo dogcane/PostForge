@@ -1,13 +1,12 @@
-using AutoMapper;
 using Mediator;
 using PostForge.Application.Campaigns.DTOs;
+using PostForge.Application.Common.Mappings;
 using PostForge.Domain.Interfaces;
 
 namespace PostForge.Application.Campaigns.Queries.GetAllCampaigns;
 
 public class GetAllCampaignsHandler(
-    ICampaignRepository campaignRepository,
-    IMapper mapper) : IRequestHandler<GetAllCampaignsQuery, List<CampaignDto>>
+    ICampaignRepository campaignRepository) : IRequestHandler<GetAllCampaignsQuery, List<CampaignDto>>
 {
     public ValueTask<List<CampaignDto>> Handle(GetAllCampaignsQuery request, CancellationToken cancellationToken)
     {
@@ -27,6 +26,6 @@ public class GetAllCampaignsHandler(
 
         var campaigns = query.ToList();
 
-        return ValueTask.FromResult(mapper.Map<List<CampaignDto>>(campaigns));
+        return ValueTask.FromResult(campaigns.Select(c => c.ToDto()).ToList());
     }
 }

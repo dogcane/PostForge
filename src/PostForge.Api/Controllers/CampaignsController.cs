@@ -1,4 +1,5 @@
 using Mediator;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PostForge.Application.Campaigns.Commands.CreateCampaign;
 using PostForge.Application.Campaigns.Commands.DeleteCampaign;
@@ -11,6 +12,7 @@ using PostForge.Domain.ValueObjects;
 namespace PostForge.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/v1/campaigns")]
 public class CampaignsController : ControllerBase
 {

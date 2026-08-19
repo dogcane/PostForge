@@ -6,10 +6,12 @@ namespace PostForge.UnitTests.Domain;
 
 public class PostTests
 {
+    private static readonly Guid TenantId = Guid.NewGuid();
+
     [Fact]
     public void CreatingPost_ShouldSetStatusToDraft()
     {
-        var result = Post.Create("Test content");
+        var result = Post.Create("Test content", TenantId);
 
         result.Success.Should().BeTrue();
         result.Value!.Status.Should().Be(PostStatus.Draft);
@@ -18,7 +20,7 @@ public class PostTests
     [Fact]
     public void CreatingPost_WithEmptyText_ShouldReturnFailure()
     {
-        var result = Post.Create("");
+        var result = Post.Create("", TenantId);
 
         result.Success.Should().BeFalse();
         result.Errors.Should().Contain(e => e.Context == "Text");
@@ -27,7 +29,7 @@ public class PostTests
     [Fact]
     public void CreatingPost_WithNullText_ShouldReturnFailure()
     {
-        var result = Post.Create(null!);
+        var result = Post.Create(null!, TenantId);
 
         result.Success.Should().BeFalse();
         result.Errors.Should().Contain(e => e.Context == "Text");
@@ -36,7 +38,7 @@ public class PostTests
     [Fact]
     public void CreatingPost_WithTextOver5000Chars_ShouldReturnFailure()
     {
-        var result = Post.Create(new string('x', 5001));
+        var result = Post.Create(new string('x', 5001), TenantId);
 
         result.Success.Should().BeFalse();
         result.Errors.Should().Contain(e => e.Context == "Text");
@@ -45,7 +47,7 @@ public class PostTests
     [Fact]
     public void SetStatus_ShouldChangeStatus()
     {
-        var post = Post.Create("Test content").Value!;
+        var post = Post.Create("Test content", TenantId).Value!;
 
         var result = post.SetStatus(PostStatus.Ready);
 
@@ -56,8 +58,8 @@ public class PostTests
     [Fact]
     public void AddMedia_ShouldAddMediaToCollection()
     {
-        var post = Post.Create("Test content").Value!;
-        var media = MediaAsset.Create("https://example.com/image.jpg", "image/jpeg").Value!;
+        var post = Post.Create("Test content", TenantId).Value!;
+        var media = MediaAsset.Create(TenantId, "https://example.com/image.jpg", "image/jpeg").Value!;
 
         var result = post.AddMedia(media);
 
@@ -68,7 +70,7 @@ public class PostTests
     [Fact]
     public void AddMedia_WithNull_ShouldReturnFailure()
     {
-        var post = Post.Create("Test content").Value!;
+        var post = Post.Create("Test content", TenantId).Value!;
 
         var result = post.AddMedia(null!);
 
@@ -79,8 +81,8 @@ public class PostTests
     [Fact]
     public void RemoveMedia_ShouldRemoveMediaFromCollection()
     {
-        var post = Post.Create("Test content").Value!;
-        var media = MediaAsset.Create("https://example.com/image.jpg", "image/jpeg").Value!;
+        var post = Post.Create("Test content", TenantId).Value!;
+        var media = MediaAsset.Create(TenantId, "https://example.com/image.jpg", "image/jpeg").Value!;
         post.AddMedia(media);
 
         var result = post.RemoveMedia(media);
@@ -92,8 +94,8 @@ public class PostTests
     [Fact]
     public void RemoveMedia_WhenMediaNotInCollection_ShouldReturnFailure()
     {
-        var post = Post.Create("Test content").Value!;
-        var media = MediaAsset.Create("https://example.com/image.jpg", "image/jpeg").Value!;
+        var post = Post.Create("Test content", TenantId).Value!;
+        var media = MediaAsset.Create(TenantId, "https://example.com/image.jpg", "image/jpeg").Value!;
 
         var result = post.RemoveMedia(media);
 
@@ -104,7 +106,7 @@ public class PostTests
     [Fact]
     public void ScheduleForPlatform_ShouldAddTargetPlatform()
     {
-        var post = Post.Create("Test content").Value!;
+        var post = Post.Create("Test content", TenantId).Value!;
 
         var result = post.ScheduleForPlatform("FACEBOOK");
 
@@ -115,7 +117,7 @@ public class PostTests
     [Fact]
     public void ScheduleForPlatform_ShouldNotAddDuplicatePlatform()
     {
-        var post = Post.Create("Test content").Value!;
+        var post = Post.Create("Test content", TenantId).Value!;
 
         post.ScheduleForPlatform("FACEBOOK");
         post.ScheduleForPlatform("FACEBOOK");
@@ -126,7 +128,7 @@ public class PostTests
     [Fact]
     public void UpdateText_ShouldUpdateTextAndTimestamp()
     {
-        var post = Post.Create("Original text").Value!;
+        var post = Post.Create("Original text", TenantId).Value!;
 
         var result = post.UpdateText("Updated text");
 
@@ -138,7 +140,7 @@ public class PostTests
     [Fact]
     public void UpdateText_WithEmptyText_ShouldReturnFailure()
     {
-        var post = Post.Create("Original text").Value!;
+        var post = Post.Create("Original text", TenantId).Value!;
 
         var result = post.UpdateText("");
 
@@ -149,7 +151,7 @@ public class PostTests
     [Fact]
     public void AddTag_ShouldAddTagWhenPlatformIsTargeted()
     {
-        var post = Post.Create("Test content").Value!;
+        var post = Post.Create("Test content", TenantId).Value!;
         post.ScheduleForPlatform("FACEBOOK");
         var tag = PostTag.Create("FACEBOOK", PostTagType.Mention, "marco.rossi").Value!;
 
@@ -162,7 +164,7 @@ public class PostTests
     [Fact]
     public void AddTag_OnUntargetedPlatform_ShouldReturnFailure()
     {
-        var post = Post.Create("Test content").Value!;
+        var post = Post.Create("Test content", TenantId).Value!;
         post.ScheduleForPlatform("INSTAGRAM");
         var tag = PostTag.Create("FACEBOOK", PostTagType.Collaborator, "marco.rossi").Value!;
 
@@ -175,7 +177,7 @@ public class PostTests
     [Fact]
     public void AddTag_Duplicate_ShouldReturnFailure()
     {
-        var post = Post.Create("Test content").Value!;
+        var post = Post.Create("Test content", TenantId).Value!;
         post.ScheduleForPlatform("FACEBOOK");
         var tag = PostTag.Create("FACEBOOK", PostTagType.UserTag, "marco.rossi").Value!;
         post.AddTag(tag);
@@ -189,7 +191,7 @@ public class PostTests
     [Fact]
     public void AddTag_WithNull_ShouldReturnFailure()
     {
-        var post = Post.Create("Test content").Value!;
+        var post = Post.Create("Test content", TenantId).Value!;
         post.ScheduleForPlatform("FACEBOOK");
 
         var result = post.AddTag(null!);
@@ -201,7 +203,7 @@ public class PostTests
     [Fact]
     public void SetTags_ShouldReplaceExistingTags()
     {
-        var post = Post.Create("Test content").Value!;
+        var post = Post.Create("Test content", TenantId).Value!;
         post.ScheduleForPlatform("FACEBOOK");
         var original = PostTag.Create("FACEBOOK", PostTagType.Mention, "annamaria.bianchi").Value!;
         post.AddTag(original);
@@ -223,7 +225,7 @@ public class PostTests
     [Fact]
     public void SetTags_WithDuplicate_ShouldReturnFailure()
     {
-        var post = Post.Create("Test content").Value!;
+        var post = Post.Create("Test content", TenantId).Value!;
         post.ScheduleForPlatform("FACEBOOK");
         var tag = PostTag.Create("FACEBOOK", PostTagType.Mention, "marco.rossi").Value!;
 
@@ -236,7 +238,7 @@ public class PostTests
     [Fact]
     public void SetTags_WithPlatformNotTargeted_ShouldReturnFailure()
     {
-        var post = Post.Create("Test content").Value!;
+        var post = Post.Create("Test content", TenantId).Value!;
         post.ScheduleForPlatform("FACEBOOK");
         var tags = new[] { PostTag.Create("INSTAGRAM", PostTagType.Collaborator, "carlo.verdi").Value! };
 
@@ -249,7 +251,7 @@ public class PostTests
     [Fact]
     public void RemoveTag_ShouldRemoveTagFromCollection()
     {
-        var post = Post.Create("Test content").Value!;
+        var post = Post.Create("Test content", TenantId).Value!;
         post.ScheduleForPlatform("FACEBOOK");
         var tag = PostTag.Create("FACEBOOK", PostTagType.Mention, "marco.rossi").Value!;
         post.AddTag(tag);
@@ -263,7 +265,7 @@ public class PostTests
     [Fact]
     public void RemoveTag_WhenTagNotInCollection_ShouldReturnFailure()
     {
-        var post = Post.Create("Test content").Value!;
+        var post = Post.Create("Test content", TenantId).Value!;
         post.ScheduleForPlatform("FACEBOOK");
         var tag = PostTag.Create("FACEBOOK", PostTagType.Mention, "marco.rossi").Value!;
 

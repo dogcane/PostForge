@@ -20,7 +20,7 @@ PostForge è in **Fase 0 completata**. Soluzione .NET 10 con Clean Architecture,
 | Runtime | .NET 10 + C# 14 |
 | API | ASP.NET Core Web API versionata |
 | CQRS | **Mediator** (martinothamar) — source generator, `ValueTask<T>`, `IMessage` constraint |
-| Persistenza | **ECO** (ECO.Core + ECO.Providers.EntityFramework.SqlServer) |
+| Persistenza | **ECO** (ECO.Core + ECO.Providers.EntityFramework + Npgsql) |
 | Scheduling | Worker Service + Quartz.NET |
 | Messaging | Azure Service Bus (o Storage Queue) |
 | Secrets | Azure Key Vault + Managed Identity |
@@ -36,7 +36,7 @@ PostForge è in **Fase 0 completata**. Soluzione .NET 10 con Clean Architecture,
 |---|---|
 | Runtime | .NET 10 + C# 14 |
 | API | ASP.NET Core Web API versionata |
-| Persistenza | **ECO** (ECO.Core + ECO.Providers.EntityFramework.SqlServer) |
+| Persistenza | **ECO** (ECO.Core + ECO.Providers.EntityFramework + Npgsql) |
 | Scheduling | Worker Service + Quartz.NET |
 | Messaging | Azure Service Bus (o Storage Queue) |
 | Secrets | Azure Key Vault + Managed Identity |

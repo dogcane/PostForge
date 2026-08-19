@@ -1,5 +1,6 @@
 using ECO.Data;
 using Mediator;
+using PostForge.Application.Common.Extensions;
 using PostForge.Domain.Interfaces;
 using PostForge.Domain.ValueObjects;
 
@@ -14,20 +15,12 @@ public class UpdatePostHandler(
         var post = await postRepository.LoadAsync(request.Id)
             ?? throw new KeyNotFoundException($"Post with Id {request.Id} was not found.");
 
-        var updateResult = post.UpdateText(request.Text);
-        if (!updateResult.Success)
-            throw new InvalidOperationException(
-                string.Join("; ", updateResult.Errors.Select(e => $"{e.Context}: {e.Description}")));
+        post.UpdateText(request.Text).EnsureSuccess();
 
         if (request.TargetPlatforms is not null)
         {
             foreach (var platform in request.TargetPlatforms)
-            {
-                var result = post.ScheduleForPlatform(platform);
-                if (!result.Success)
-                    throw new InvalidOperationException(
-                        string.Join("; ", result.Errors.Select(e => $"{e.Context}: {e.Description}")));
-            }
+                post.ScheduleForPlatform(platform).EnsureSuccess();
         }
 
         if (request.MediaAssets is not null)
@@ -36,30 +29,16 @@ public class UpdatePostHandler(
                 post.RemoveMedia(media);
 
             foreach (var media in request.MediaAssets)
-            {
-                var result = post.AddMedia(media);
-                if (!result.Success)
-                    throw new InvalidOperationException(
-                        string.Join("; ", result.Errors.Select(e => $"{e.Context}: {e.Description}")));
-            }
+                post.AddMedia(media).EnsureSuccess();
         }
 
         if (request.Tags is not null)
         {
-            var tags = new List<PostTag>(request.Tags.Count);
-            foreach (var tagDto in request.Tags)
-            {
-                var tag = PostTag.Create(tagDto.Platform, tagDto.TagType, tagDto.Username);
-                if (!tag.Success)
-                    throw new InvalidOperationException(
-                        string.Join("; ", tag.Errors.Select(e => $"{e.Context}: {e.Description}")));
-                tags.Add(tag.Value!);
-            }
+            var tags = request.Tags
+                .Select(t => PostTag.Create(t.Platform, t.TagType, t.Username).EnsureSuccess())
+                .ToList();
 
-            var setTagsResult = post.SetTags(tags);
-            if (!setTagsResult.Success)
-                throw new InvalidOperationException(
-                    string.Join("; ", setTagsResult.Errors.Select(e => $"{e.Context}: {e.Description}")));
+            post.SetTags(tags).EnsureSuccess();
         }
 
         postRepository.Update(post);

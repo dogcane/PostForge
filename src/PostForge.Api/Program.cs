@@ -1,7 +1,8 @@
 using Mediator;
 using PostForge.Api;
-using PostForge.Application;
 using PostForge.Api.Middleware;
+using PostForge.Application;
+using PostForge.Infrastructure.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +29,8 @@ builder.Services.AddTransient<GlobalExceptionHandler>();
 
 var app = builder.Build();
 
+await app.Services.EnsureIdentityDatabaseAndSuperUserAsync(builder.Configuration);
+
 app.UseCors("AllowAll");
 
 app.UseSwagger();
@@ -36,6 +39,9 @@ app.UseSwaggerUI();
 app.UseMiddleware<GlobalExceptionHandler>();
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
+app.UseMiddleware<TenantResolutionMiddleware>();
 
 app.UseAuthorization();
 

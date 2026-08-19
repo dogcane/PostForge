@@ -6,12 +6,13 @@ using PostForge.Infrastructure.DAL;
 
 namespace PostForge.IntegrationTests.Infrastructure;
 
-[Collection("SqlServer")]
+[Collection("PostgreSql")]
 public class DbContextTests
 {
+    private static readonly Guid TenantId = Guid.NewGuid();
     private readonly string _connectionString;
 
-    public DbContextTests(SqlServerContainerFixture fixture)
+    public DbContextTests(PostgreSqlContainerFixture fixture)
     {
         _connectionString = fixture.ConnectionString;
     }
@@ -19,7 +20,7 @@ public class DbContextTests
     private PostForgeDbContext CreateDbContext()
     {
         var options = new DbContextOptionsBuilder<PostForgeDbContext>()
-            .UseSqlServer(_connectionString)
+            .UseNpgsql(_connectionString)
             .Options;
 
         return new PostForgeDbContext(options);
@@ -41,7 +42,7 @@ public class DbContextTests
         using var context = CreateDbContext();
         await context.Database.EnsureCreatedAsync();
 
-        var post = Post.Create("Integration test post content").Value!;
+        var post = Post.Create("Integration test post content", TenantId).Value!;
         context.Posts.Add(post);
         await context.SaveChangesAsync();
 
@@ -58,7 +59,7 @@ public class DbContextTests
         using var context = CreateDbContext();
         await context.Database.EnsureCreatedAsync();
 
-        var post = Post.Create("Original text").Value!;
+        var post = Post.Create("Original text", TenantId).Value!;
         context.Posts.Add(post);
         await context.SaveChangesAsync();
 
@@ -76,7 +77,7 @@ public class DbContextTests
         using var context = CreateDbContext();
         await context.Database.EnsureCreatedAsync();
 
-        var post = Post.Create("Post to delete").Value!;
+        var post = Post.Create("Post to delete", TenantId).Value!;
         context.Posts.Add(post);
         await context.SaveChangesAsync();
 
@@ -93,8 +94,8 @@ public class DbContextTests
         using var context = CreateDbContext();
         await context.Database.EnsureCreatedAsync();
 
-        var post = Post.Create("Post with media").Value!;
-        var media = MediaAsset.Create("https://example.com/image.jpg", "image/jpeg").Value!;
+        var post = Post.Create("Post with media", TenantId).Value!;
+        var media = MediaAsset.Create(TenantId, "https://example.com/image.jpg", "image/jpeg").Value!;
         post.AddMedia(media);
         context.Posts.Add(post);
         await context.SaveChangesAsync();
@@ -111,7 +112,7 @@ public class DbContextTests
         using var context = CreateDbContext();
         await context.Database.EnsureCreatedAsync();
 
-        var post = Post.Create("Multi-platform post").Value!;
+        var post = Post.Create("Multi-platform post", TenantId).Value!;
         post.ScheduleForPlatform("FACEBOOK");
         post.ScheduleForPlatform("INSTAGRAM");
         context.Posts.Add(post);
@@ -128,7 +129,7 @@ public class DbContextTests
         using var context = CreateDbContext();
         await context.Database.EnsureCreatedAsync();
 
-        var post = Post.Create("Post with tags").Value!;
+        var post = Post.Create("Post with tags", TenantId).Value!;
         post.ScheduleForPlatform("FACEBOOK");
         post.AddTag(PostTag.Create("FACEBOOK", PostTagType.Mention, "marco.rossi").Value!);
         post.AddTag(PostTag.Create("FACEBOOK", PostTagType.Collaborator, "silvia.neri").Value!);
@@ -147,11 +148,11 @@ public class DbContextTests
         using var context = CreateDbContext();
         await context.Database.EnsureCreatedAsync();
 
-        var post = Post.Create("Scheduled post").Value!;
+        var post = Post.Create("Scheduled post", TenantId).Value!;
         context.Posts.Add(post);
         await context.SaveChangesAsync();
 
-        var slot = ScheduleSlot.Create(post.Id, "TIKTOK", DateTime.UtcNow.AddDays(7)).Value!;
+        var slot = ScheduleSlot.Create(TenantId, post.Id, "TIKTOK", DateTime.UtcNow.AddDays(7)).Value!;
         context.ScheduleSlots.Add(slot);
         await context.SaveChangesAsync();
 
@@ -168,15 +169,15 @@ public class DbContextTests
         using var context = CreateDbContext();
         await context.Database.EnsureCreatedAsync();
 
-        var campaign = Campaign.Create(
+        var campaign = Campaign.Create(TenantId, 
             "Test Campaign",
             CampaignGoal.Awareness,
             CampaignChannel.Organic,
             DateTime.UtcNow,
             DateTime.UtcNow.AddDays(30)).Value!;
 
-        var post1 = Post.Create("Campaign post 1").Value!;
-        var post2 = Post.Create("Campaign post 2").Value!;
+        var post1 = Post.Create("Campaign post 1", TenantId).Value!;
+        var post2 = Post.Create("Campaign post 2", TenantId).Value!;
         context.Posts.Add(post1);
         context.Posts.Add(post2);
         await context.SaveChangesAsync();
@@ -199,7 +200,7 @@ public class DbContextTests
         using var context = CreateDbContext();
         await context.Database.EnsureCreatedAsync();
 
-        var account = SocialAccount.Create("FACEBOOK", "My Page", "encrypted_oauth_token").Value!;
+        var account = SocialAccount.Create(TenantId, "FACEBOOK", "My Page", "encrypted_oauth_token").Value!;
         context.SocialAccounts.Add(account);
         await context.SaveChangesAsync();
 
@@ -215,7 +216,7 @@ public class DbContextTests
         using var context = CreateDbContext();
         await context.Database.EnsureCreatedAsync();
 
-        var credential = ProviderCredential.Create(
+        var credential = ProviderCredential.Create(TenantId, 
             "openai",
             ProviderCredentialScope.AiText,
             "kv-ref-openai-key").Value!;

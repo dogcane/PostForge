@@ -10,6 +10,7 @@ public class Campaign : AggregateRoot<Guid>
     private readonly List<Guid> _postIdsField = [];
 
     public Guid Id => Identity;
+    public Guid TenantId { get; private set; }
     public string Name { get; private set; }
     public CampaignGoal Goal { get; private set; }
     public CampaignChannel Channel { get; private set; }
@@ -23,8 +24,9 @@ public class Campaign : AggregateRoot<Guid>
         Name = null!;
     }
 
-    private Campaign(string name, CampaignGoal goal, CampaignChannel channel, DateTime startDateUtc, DateTime? endDateUtc) : base(Guid.NewGuid())
+    private Campaign(Guid tenantId, string name, CampaignGoal goal, CampaignChannel channel, DateTime startDateUtc, DateTime? endDateUtc) : base(Guid.NewGuid())
     {
+        TenantId = tenantId;
         Name = name;
         Goal = goal;
         Channel = channel;
@@ -33,10 +35,11 @@ public class Campaign : AggregateRoot<Guid>
         CreatedAtUtc = DateTime.UtcNow;
     }
 
-    public static OperationResult<Campaign> Create(string name, CampaignGoal goal, CampaignChannel channel, DateTime startDateUtc, DateTime? endDateUtc = null)
+    public static OperationResult<Campaign> Create(Guid tenantId, string name, CampaignGoal goal, CampaignChannel channel, DateTime startDateUtc, DateTime? endDateUtc = null)
     {
         var result = OperationResult.MakeSuccess();
         result
+            .With(tenantId, "TenantId").Condition(v => v != Guid.Empty)
             .With(name, "Name").Required().StringLength(200)
             .With(goal, "Goal").Condition(v => Enum.IsDefined(typeof(CampaignGoal), v))
             .With(channel, "Channel").Condition(v => Enum.IsDefined(typeof(CampaignChannel), v));
@@ -44,7 +47,7 @@ public class Campaign : AggregateRoot<Guid>
             result.With(endDateUtc.Value, "EndDate").Condition(v => v > startDateUtc);
         if (!result.Success)
             return result;
-        return OperationResult<Campaign>.MakeSuccess(new Campaign(name, goal, channel, startDateUtc, endDateUtc));
+        return OperationResult<Campaign>.MakeSuccess(new Campaign(tenantId, name, goal, channel, startDateUtc, endDateUtc));
     }
 
     public OperationResult UpdateDetails(string name, CampaignGoal goal, CampaignChannel channel, DateTime startDateUtc, DateTime? endDateUtc)

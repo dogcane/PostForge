@@ -1,10 +1,8 @@
-using PostForge.Application.Common.Mappings;
-using PostForge.Domain.Entities;
 using PostForge.Domain.ValueObjects;
 
 namespace PostForge.Application.Campaigns.DTOs;
 
-public class CampaignDto : IMapFrom<Campaign>
+public class CampaignDto
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = null!;

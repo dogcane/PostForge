@@ -1,13 +1,12 @@
-using AutoMapper;
 using Mediator;
-using PostForge.Domain.Interfaces;
+using PostForge.Application.Common.Mappings;
 using PostForge.Application.Posts.DTOs;
+using PostForge.Domain.Interfaces;
 
 namespace PostForge.Application.Posts.Queries.GetAllPosts;
 
 public class GetAllPostsHandler(
-    IPostRepository postRepository,
-    IMapper mapper) : IRequestHandler<GetAllPostsQuery, List<PostDto>>
+    IPostRepository postRepository) : IRequestHandler<GetAllPostsQuery, List<PostDto>>
 {
     public ValueTask<List<PostDto>> Handle(GetAllPostsQuery request, CancellationToken cancellationToken)
     {
@@ -27,6 +26,6 @@ public class GetAllPostsHandler(
         if (!string.IsNullOrWhiteSpace(request.Platform))
             posts = posts.Where(p => p.TargetPlatforms.Contains(request.Platform)).ToList();
 
-        return ValueTask.FromResult(mapper.Map<List<PostDto>>(posts));
+        return ValueTask.FromResult(posts.Select(p => p.ToDto()).ToList());
     }
 }

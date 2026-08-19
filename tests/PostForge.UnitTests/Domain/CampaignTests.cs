@@ -6,12 +6,13 @@ namespace PostForge.UnitTests.Domain;
 
 public class CampaignTests
 {
+    private static readonly Guid TenantId = Guid.NewGuid();
     private static readonly DateTime FixedDate = new(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
     [Fact]
     public void CreatingCampaign_ShouldInitializeWithEmptyPostIds()
     {
-        var result = Campaign.Create("Test Campaign", CampaignGoal.Awareness, CampaignChannel.Organic, FixedDate);
+        var result = Campaign.Create(TenantId, "Test Campaign", CampaignGoal.Awareness, CampaignChannel.Organic, FixedDate);
 
         result.Success.Should().BeTrue();
         result.Value!.PostIds.Should().BeEmpty();
@@ -20,7 +21,7 @@ public class CampaignTests
     [Fact]
     public void CreatingCampaign_ShouldSetProperties()
     {
-        var result = Campaign.Create("Test Campaign", CampaignGoal.Awareness, CampaignChannel.Organic, FixedDate, FixedDate.AddDays(30));
+        var result = Campaign.Create(TenantId, "Test Campaign", CampaignGoal.Awareness, CampaignChannel.Organic, FixedDate, FixedDate.AddDays(30));
 
         result.Value!.Name.Should().Be("Test Campaign");
         result.Value.Goal.Should().Be(CampaignGoal.Awareness);
@@ -32,7 +33,7 @@ public class CampaignTests
     [Fact]
     public void CreatingCampaign_WithoutEndDate_ShouldSetEndDateToNull()
     {
-        var result = Campaign.Create("Test Campaign", CampaignGoal.Awareness, CampaignChannel.Organic, FixedDate);
+        var result = Campaign.Create(TenantId, "Test Campaign", CampaignGoal.Awareness, CampaignChannel.Organic, FixedDate);
 
         result.Value!.EndDateUtc.Should().BeNull();
     }
@@ -40,7 +41,7 @@ public class CampaignTests
     [Fact]
     public void CreatingCampaign_WithEmptyName_ShouldReturnFailure()
     {
-        var result = Campaign.Create("", CampaignGoal.Awareness, CampaignChannel.Organic, FixedDate);
+        var result = Campaign.Create(TenantId, "", CampaignGoal.Awareness, CampaignChannel.Organic, FixedDate);
 
         result.Success.Should().BeFalse();
         result.Errors.Should().Contain(e => e.Context == "Name");
@@ -49,7 +50,7 @@ public class CampaignTests
     [Fact]
     public void CreatingCampaign_WithEndDateBeforeStartDate_ShouldReturnFailure()
     {
-        var result = Campaign.Create("Test", CampaignGoal.Awareness, CampaignChannel.Organic, FixedDate, FixedDate.AddDays(-1));
+        var result = Campaign.Create(TenantId, "Test", CampaignGoal.Awareness, CampaignChannel.Organic, FixedDate, FixedDate.AddDays(-1));
 
         result.Success.Should().BeFalse();
         result.Errors.Should().Contain(e => e.Context == "EndDate");
@@ -58,7 +59,7 @@ public class CampaignTests
     [Fact]
     public void AddPost_ShouldAddPostIdToCollection()
     {
-        var campaign = Campaign.Create("Test Campaign", CampaignGoal.Awareness, CampaignChannel.Organic, FixedDate).Value!;
+        var campaign = Campaign.Create(TenantId, "Test Campaign", CampaignGoal.Awareness, CampaignChannel.Organic, FixedDate).Value!;
         var postId = Guid.NewGuid();
 
         var result = campaign.AddPost(postId);
@@ -70,7 +71,7 @@ public class CampaignTests
     [Fact]
     public void AddPost_WithEmptyGuid_ShouldReturnFailure()
     {
-        var campaign = Campaign.Create("Test Campaign", CampaignGoal.Awareness, CampaignChannel.Organic, FixedDate).Value!;
+        var campaign = Campaign.Create(TenantId, "Test Campaign", CampaignGoal.Awareness, CampaignChannel.Organic, FixedDate).Value!;
 
         var result = campaign.AddPost(Guid.Empty);
 
@@ -81,7 +82,7 @@ public class CampaignTests
     [Fact]
     public void AddPost_ShouldNotAddDuplicate()
     {
-        var campaign = Campaign.Create("Test Campaign", CampaignGoal.Awareness, CampaignChannel.Organic, FixedDate).Value!;
+        var campaign = Campaign.Create(TenantId, "Test Campaign", CampaignGoal.Awareness, CampaignChannel.Organic, FixedDate).Value!;
         var postId = Guid.NewGuid();
 
         campaign.AddPost(postId);
@@ -93,7 +94,7 @@ public class CampaignTests
     [Fact]
     public void RemovePost_ShouldRemovePostIdFromCollection()
     {
-        var campaign = Campaign.Create("Test Campaign", CampaignGoal.Awareness, CampaignChannel.Organic, FixedDate).Value!;
+        var campaign = Campaign.Create(TenantId, "Test Campaign", CampaignGoal.Awareness, CampaignChannel.Organic, FixedDate).Value!;
         var postId = Guid.NewGuid();
         campaign.AddPost(postId);
 
@@ -106,7 +107,7 @@ public class CampaignTests
     [Fact]
     public void RemoveNonExistentPost_ShouldReturnFailure()
     {
-        var campaign = Campaign.Create("Test Campaign", CampaignGoal.Awareness, CampaignChannel.Organic, FixedDate).Value!;
+        var campaign = Campaign.Create(TenantId, "Test Campaign", CampaignGoal.Awareness, CampaignChannel.Organic, FixedDate).Value!;
 
         var result = campaign.RemovePost(Guid.NewGuid());
 
@@ -117,7 +118,7 @@ public class CampaignTests
     [Fact]
     public void UpdateDetails_ShouldUpdateAllProperties()
     {
-        var campaign = Campaign.Create("Original", CampaignGoal.Awareness, CampaignChannel.Organic, FixedDate).Value!;
+        var campaign = Campaign.Create(TenantId, "Original", CampaignGoal.Awareness, CampaignChannel.Organic, FixedDate).Value!;
 
         var result = campaign.UpdateDetails("Updated", CampaignGoal.Reputation, CampaignChannel.Paid, FixedDate.AddDays(1), FixedDate.AddDays(15));
 

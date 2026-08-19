@@ -1,5 +1,6 @@
 using ECO.Data;
 using Mediator;
+using PostForge.Application.Common.Extensions;
 using PostForge.Domain.Interfaces;
 
 namespace PostForge.Application.Scheduling.Commands.MarkSlotPublished;
@@ -13,10 +14,7 @@ public class MarkSlotPublishedHandler(
         var slot = await scheduleSlotRepository.LoadAsync(request.SlotId)
             ?? throw new KeyNotFoundException($"ScheduleSlot with Id {request.SlotId} was not found.");
 
-        var result = slot.MarkPublished();
-        if (!result.Success)
-            throw new InvalidOperationException(
-                string.Join("; ", result.Errors.Select(e => $"{e.Context}: {e.Description}")));
+        slot.MarkPublished().EnsureSuccess();
 
         scheduleSlotRepository.Update(slot);
         await dataContext.SaveChangesAsync(cancellationToken);

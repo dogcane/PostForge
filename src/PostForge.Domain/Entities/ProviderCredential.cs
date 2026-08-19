@@ -8,6 +8,7 @@ namespace PostForge.Domain.Entities;
 public class ProviderCredential : AggregateRoot<Guid>
 {
     public Guid Id => Identity;
+    public Guid TenantId { get; private set; }
     public string ProviderKey { get; private set; }
     public ProviderCredentialScope Scope { get; private set; }
     public string KeyVaultReference { get; private set; }
@@ -20,8 +21,9 @@ public class ProviderCredential : AggregateRoot<Guid>
         KeyVaultReference = null!;
     }
 
-    private ProviderCredential(string providerKey, ProviderCredentialScope scope, string keyVaultReference) : base(Guid.NewGuid())
+    private ProviderCredential(Guid tenantId, string providerKey, ProviderCredentialScope scope, string keyVaultReference) : base(Guid.NewGuid())
     {
+        TenantId = tenantId;
         ProviderKey = providerKey;
         Scope = scope;
         KeyVaultReference = keyVaultReference;
@@ -29,16 +31,17 @@ public class ProviderCredential : AggregateRoot<Guid>
         CreatedAtUtc = DateTime.UtcNow;
     }
 
-    public static OperationResult<ProviderCredential> Create(string providerKey, ProviderCredentialScope scope, string keyVaultReference)
+    public static OperationResult<ProviderCredential> Create(Guid tenantId, string providerKey, ProviderCredentialScope scope, string keyVaultReference)
     {
         var result = OperationResult.MakeSuccess();
         result
+            .With(tenantId, "TenantId").Condition(v => v != Guid.Empty)
             .With(providerKey, "ProviderKey").Required().StringLength(100)
             .With(scope, "Scope").Condition(v => Enum.IsDefined(typeof(ProviderCredentialScope), v))
             .With(keyVaultReference, "KeyVaultReference").Required().StringLength(500);
         if (!result.Success)
             return result;
-        return OperationResult<ProviderCredential>.MakeSuccess(new ProviderCredential(providerKey, scope, keyVaultReference));
+        return OperationResult<ProviderCredential>.MakeSuccess(new ProviderCredential(tenantId, providerKey, scope, keyVaultReference));
     }
 
     public OperationResult MarkAsValidated()

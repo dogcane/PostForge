@@ -8,6 +8,7 @@ namespace PostForge.Domain.Entities;
 public class SocialAccount : AggregateRoot<Guid>
 {
     public Guid Id => Identity;
+    public Guid TenantId { get; private set; }
     public string Platform { get; private set; }
     public string DisplayName { get; private set; }
     public string OAuthTokens { get; private set; }
@@ -21,8 +22,9 @@ public class SocialAccount : AggregateRoot<Guid>
         OAuthTokens = null!;
     }
 
-    private SocialAccount(string platform, string displayName, string oauthTokens) : base(Guid.NewGuid())
+    private SocialAccount(Guid tenantId, string platform, string displayName, string oauthTokens) : base(Guid.NewGuid())
     {
+        TenantId = tenantId;
         Platform = platform;
         DisplayName = displayName;
         OAuthTokens = oauthTokens;
@@ -30,16 +32,17 @@ public class SocialAccount : AggregateRoot<Guid>
         LastRefreshedAtUtc = DateTime.UtcNow;
     }
 
-    public static OperationResult<SocialAccount> Create(string platform, string displayName, string oauthTokens)
+    public static OperationResult<SocialAccount> Create(Guid tenantId, string platform, string displayName, string oauthTokens)
     {
         var result = OperationResult.MakeSuccess();
         result
+            .With(tenantId, "TenantId").Condition(v => v != Guid.Empty)
             .With(platform, "Platform").Required().StringLength(50)
             .With(displayName, "DisplayName").Required().StringLength(200)
             .With(oauthTokens, "OAuthTokens").Required();
         if (!result.Success)
             return result;
-        return OperationResult<SocialAccount>.MakeSuccess(new SocialAccount(platform, displayName, oauthTokens));
+        return OperationResult<SocialAccount>.MakeSuccess(new SocialAccount(tenantId, platform, displayName, oauthTokens));
     }
 
     public OperationResult RefreshTokens(string oauthTokens)
