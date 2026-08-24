@@ -15,8 +15,6 @@ import { AuthService } from '../../services/auth.service';
 
       <div class="pf-main">
         <app-header (toggleMenu)="toggleSidebar()"></app-header>
-        <div class="pf-glow pf-glow--tr"></div>
-        <div class="pf-glow pf-glow--bl"></div>
         <main class="pf-content">
           <router-outlet />
         </main>

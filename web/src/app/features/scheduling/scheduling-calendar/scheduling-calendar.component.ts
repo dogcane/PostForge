@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -6,6 +6,7 @@ import { ScheduleSlot } from '../../../models/schedule-slot.model';
 import { postStatusClass, postStatusLabel } from '../../../models/post.model';
 import { platformBadgeClass, platformIcon, platformLabel } from '../../../models/platform.model';
 import { ApiService } from '../../../services/api.service';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-scheduling-calendar',
@@ -83,7 +84,7 @@ import { ApiService } from '../../../services/api.service';
     </div>
   `
 })
-export class SchedulingCalendarComponent implements OnInit {
+export class SchedulingCalendarComponent {
   currentMonth: Date = new Date();
   dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -93,11 +94,14 @@ export class SchedulingCalendarComponent implements OnInit {
   loading = false;
   error: string | null = null;
 
-  constructor(private api: ApiService) {}
+  private readonly auth = inject(AuthService);
 
-  ngOnInit(): void {
-    this.loadMonthSlots();
-    this.loadPendingSlots();
+  constructor(private api: ApiService) {
+    effect(() => {
+      this.auth.activeTenantIdSignal();
+      this.loadMonthSlots();
+      this.loadPendingSlots();
+    });
   }
 
   private loadMonthSlots(): void {

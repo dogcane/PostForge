@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, effect, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
@@ -12,6 +12,7 @@ import {
 } from '../../../models/post.model';
 import { platformBadgeClass, platformIcon, platformLabel } from '../../../models/platform.model';
 import { ApiService } from '../../../services/api.service';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-post-list',
@@ -88,15 +89,18 @@ import { ApiService } from '../../../services/api.service';
     </div>
   `
 })
-export class PostListComponent implements OnInit {
+export class PostListComponent {
   posts: Post[] = [];
   loading = false;
   error: string | null = null;
 
-  constructor(private api: ApiService) {}
+  private readonly auth = inject(AuthService);
 
-  ngOnInit(): void {
-    this.load();
+  constructor(private api: ApiService) {
+    effect(() => {
+      this.auth.activeTenantIdSignal();
+      this.load();
+    });
   }
 
   private load(): void {

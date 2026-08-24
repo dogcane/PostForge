@@ -8,6 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { finalize, switchMap } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../services/auth.service';
 
 @Component({
@@ -24,9 +25,6 @@ import { AuthService } from '../../../services/auth.service';
   ],
   template: `
     <div class="pf-auth">
-      <div class="pf-auth__glow pf-auth__glow--1"></div>
-      <div class="pf-auth__glow pf-auth__glow--2"></div>
-
       <mat-card class="pf-auth__card">
         <div class="pf-brand pf-auth__brand">
           <div class="pf-logo">
@@ -60,14 +58,22 @@ import { AuthService } from '../../../services/auth.service';
           </button>
         </form>
 
-        <p class="pf-auth__hint">
-          Default local admin: <code>admin@postforge.dev</code> / <code>Admin!12345</code>
-        </p>
+        @if (isDemo) {
+          <p class="pf-auth__hint">
+            Demo mode — no backend required.<br />
+            Sign in as <code>admin@postforge.dev</code> (super admin) or <code>demo@postforge.dev</code>. Any password works.
+          </p>
+        } @else {
+          <p class="pf-auth__hint">
+            Default local admin: <code>admin@postforge.dev</code> / <code>Admin!12345</code>
+          </p>
+        }
       </mat-card>
     </div>
   `
 })
 export class LoginComponent {
+  readonly isDemo = environment.demoMode;
   email = '';
   password = '';
   loading = false;

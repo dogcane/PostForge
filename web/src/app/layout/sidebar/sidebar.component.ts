@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, Output, computed, inject } from '@angul
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
+import { environment } from '../../../environments/environment';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -10,7 +11,6 @@ import { AuthService } from '../../services/auth.service';
   imports: [CommonModule, RouterLink, RouterLinkActive, MatIconModule],
   template: `
     <aside class="pf-sidebar" [class.open]="open">
-      <div class="pf-sidebar__glow"></div>
       <div class="pf-sidebar__inner">
         <div class="pf-brand">
           <div class="pf-logo">
@@ -18,7 +18,7 @@ import { AuthService } from '../../services/auth.service';
           </div>
           <div class="pf-brand__text">
             <span class="pf-brand__name">PostForge</span>
-            <span class="pf-brand__sub">Content Studio</span>
+            <span class="pf-brand__sub">{{ isDemo ? 'Demo Mode' : 'Content Studio' }}</span>
           </div>
         </div>
 
@@ -72,6 +72,7 @@ import { AuthService } from '../../services/auth.service';
   `
 })
 export class SidebarComponent {
+  readonly isDemo = environment.demoMode;
   @Input() open = false;
   @Output() close = new EventEmitter<void>();
 

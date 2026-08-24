@@ -43,80 +43,70 @@ $dark-theme: mat.define-theme((
   @include mat.all-component-themes($light-theme);
   color-scheme: light;
 
-  --pf-bg: #f1f2fb;
-  --pf-bg-glow-1: rgba(108, 92, 246, 0.13);
-  --pf-bg-glow-2: rgba(236, 72, 153, 0.11);
+  --pf-bg: #f5f6f8;
   --pf-surface: #ffffff;
-  --pf-surface-strong: #f7f7ff;
-  --pf-glass: rgba(255, 255, 255, 0.72);
-  --pf-border: rgba(23, 25, 55, 0.08);
-  --pf-border-strong: rgba(23, 25, 55, 0.16);
-  --pf-text: #1a1c33;
-  --pf-text-muted: #63688b;
-  --pf-text-faint: #a2a7c5;
+  --pf-surface-strong: #eef0f3;
+  --pf-border: #e4e6eb;
+  --pf-border-strong: #d2d5dd;
+  --pf-text: #191b23;
+  --pf-text-muted: #5c6070;
+  --pf-text-faint: #9297a7;
   --pf-primary: #6c5cf6;
-  --pf-primary-strong: #5a48ef;
+  --pf-primary-hover: #5848ea;
+  --pf-primary-soft: rgba(108, 92, 246, 0.1);
   --pf-accent: #ec4899;
   --pf-success: #12b886;
   --pf-warning: #f59f00;
   --pf-danger: #f03e3e;
   --pf-info: #3bc0f7;
-  --pf-aurora: linear-gradient(120deg, #6c5cf6 0%, #9a5cf5 42%, #e04fd3 72%, #f5568b 100%);
-  --pf-aurora-soft: linear-gradient(120deg, rgba(108, 92, 246, 0.14) 0%, rgba(224, 79, 211, 0.13) 72%, rgba(245, 86, 139, 0.13) 100%);
-  --pf-shadow-sm: 0 1px 2px rgba(23, 25, 55, 0.05);
-  --pf-shadow-md: 0 10px 28px -12px rgba(23, 25, 55, 0.16);
-  --pf-shadow-lg: 0 28px 64px -20px rgba(23, 25, 55, 0.24);
-  --pf-radius-sm: 10px;
-  --pf-radius-md: 16px;
-  --pf-radius-lg: 24px;
-  --pf-sidebar-bg: linear-gradient(180deg, #ffffff 0%, #f5f4ff 100%);
-  --pf-sidebar-glow: rgba(108, 92, 246, 0.12);
-  --pf-sidebar-border: rgba(23, 25, 55, 0.08);
-  --pf-sidebar-text: #5c6191;
-  --pf-sidebar-text-dim: #a2a7c5;
-  --pf-sidebar-hover: rgba(108, 92, 246, 0.07);
-  --pf-sidebar-user-bg: rgba(23, 25, 55, 0.035);
-  --pf-sidebar-user-border: rgba(23, 25, 55, 0.08);
+  --pf-shadow-sm: none;
+  --pf-shadow-md: none;
+  --pf-shadow-lg: none;
+  --pf-radius-sm: 8px;
+  --pf-radius-md: 10px;
+  --pf-radius-lg: 14px;
+  --pf-sidebar-bg: #ffffff;
+  --pf-sidebar-border: var(--pf-border);
+  --pf-sidebar-text: #5c6070;
+  --pf-sidebar-text-dim: #9297a7;
+  --pf-sidebar-hover: var(--pf-surface-strong);
+  --pf-sidebar-user-bg: var(--pf-bg);
+  --pf-sidebar-user-border: var(--pf-border);
 }
 
 html[data-theme='dark'] {
   @include mat.all-component-themes($dark-theme);
   color-scheme: dark;
 
-  --pf-bg: #0b0c19;
-  --pf-bg-glow-1: rgba(108, 92, 246, 0.24);
-  --pf-bg-glow-2: rgba(236, 72, 153, 0.16);
-  --pf-surface: #161731;
-  --pf-surface-strong: #1d1e40;
-  --pf-glass: rgba(23, 24, 51, 0.74);
-  --pf-border: rgba(255, 255, 255, 0.08);
-  --pf-border-strong: rgba(255, 255, 255, 0.16);
-  --pf-text: #eceefe;
-  --pf-text-muted: #a5aac9;
-  --pf-text-faint: #6f7497;
+  --pf-bg: #0f1014;
+  --pf-surface: #16181d;
+  --pf-surface-strong: #1d2026;
+  --pf-border: #26292f;
+  --pf-border-strong: #34383f;
+  --pf-text: #eceef2;
+  --pf-text-muted: #a2a7b3;
+  --pf-text-faint: #6b7078;
   --pf-primary: #8b7bff;
-  --pf-primary-strong: #9d8fff;
+  --pf-primary-hover: #9c8eff;
+  --pf-primary-soft: rgba(139, 123, 255, 0.14);
   --pf-accent: #f061a6;
   --pf-success: #20c997;
   --pf-warning: #ffb020;
   --pf-danger: #ff5d5d;
   --pf-info: #4ac3fb;
-  --pf-aurora: linear-gradient(120deg, #6c5cf6 0%, #9a5cf5 42%, #e04fd3 72%, #f5568b 100%);
-  --pf-aurora-soft: linear-gradient(120deg, rgba(108, 92, 246, 0.22) 0%, rgba(224, 79, 211, 0.16) 72%, rgba(245, 86, 139, 0.16) 100%);
-  --pf-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --pf-shadow-md: 0 12px 30px -12px rgba(0, 0, 0, 0.5);
-  --pf-shadow-lg: 0 28px 64px -20px rgba(0, 0, 0, 0.6);
-  --pf-radius-sm: 10px;
-  --pf-radius-md: 16px;
-  --pf-radius-lg: 24px;
-  --pf-sidebar-bg: linear-gradient(180deg, #11122a 0%, #0b0c1c 100%);
-  --pf-sidebar-glow: rgba(108, 92, 246, 0.28);
-  --pf-sidebar-border: rgba(255, 255, 255, 0.06);
-  --pf-sidebar-text: rgba(255, 255, 255, 0.62);
-  --pf-sidebar-text-dim: rgba(255, 255, 255, 0.32);
-  --pf-sidebar-hover: rgba(255, 255, 255, 0.06);
-  --pf-sidebar-user-bg: rgba(255, 255, 255, 0.04);
-  --pf-sidebar-user-border: rgba(255, 255, 255, 0.07);
+  --pf-shadow-sm: none;
+  --pf-shadow-md: none;
+  --pf-shadow-lg: none;
+  --pf-radius-sm: 8px;
+  --pf-radius-md: 10px;
+  --pf-radius-lg: 14px;
+  --pf-sidebar-bg: #121318;
+  --pf-sidebar-border: var(--pf-border);
+  --pf-sidebar-text: #a2a7b3;
+  --pf-sidebar-text-dim: #6b7078;
+  --pf-sidebar-hover: var(--pf-surface-strong);
+  --pf-sidebar-user-bg: #0f1014;
+  --pf-sidebar-user-border: var(--pf-border);
 }
 
 /* ================= Base ================= */
@@ -139,7 +129,7 @@ body {
 }
 
 ::selection {
-  background: rgba(139, 123, 255, 0.3);
+  background: var(--pf-primary-soft);
 }
 
 ::-webkit-scrollbar {
@@ -198,34 +188,11 @@ body {
   z-index: 1;
 }
 
-.pf-glow {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  pointer-events: none;
-  z-index: 0;
-}
-.pf-glow--tr {
-  width: 520px;
-  height: 520px;
-  right: -160px;
-  top: -180px;
-  background: radial-gradient(circle, var(--pf-bg-glow-1), transparent 70%);
-}
-.pf-glow--bl {
-  width: 460px;
-  height: 460px;
-  left: -160px;
-  bottom: -140px;
-  background: radial-gradient(circle, var(--pf-bg-glow-2), transparent 70%);
-}
-
 .pf-backdrop {
   position: fixed;
   inset: 0;
   z-index: 39;
-  background: rgba(8, 9, 22, 0.5);
-  backdrop-filter: blur(2px);
+  background: rgba(10, 11, 15, 0.55);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.25s ease;
@@ -240,7 +207,7 @@ body {
   padding: 28px 32px 56px;
   max-width: 1240px;
   margin: 0 auto;
-  animation: pf-fade-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: pf-fade-up 0.3s ease both;
 }
 
 .pf-page-header {
@@ -279,7 +246,7 @@ body {
 @keyframes pf-fade-up {
   from {
     opacity: 0;
-    transform: translateY(14px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
@@ -293,14 +260,12 @@ body {
   background: var(--pf-surface);
   border: 1px solid var(--pf-border);
   border-radius: var(--pf-radius-md);
-  box-shadow: var(--pf-shadow-md);
-  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease, background 0.22s ease;
+  box-shadow: var(--pf-shadow-sm);
+  transition: border-color 0.18s ease, background 0.18s ease;
 }
 
 .pf-card--hover.mat-mdc-card:hover {
-  transform: translateY(-3px);
   border-color: var(--pf-border-strong);
-  box-shadow: var(--pf-shadow-lg);
 }
 
 /* ================= Buttons ================= */
@@ -310,33 +275,28 @@ body {
   --mdc-protected-button-container-color: transparent;
   --mdc-filled-button-label-text-color: #ffffff;
   --mdc-protected-button-label-text-color: #ffffff;
-  background: var(--pf-aurora) !important;
+  background: var(--pf-primary) !important;
   color: #ffffff !important;
-  border-radius: 12px !important;
+  border-radius: var(--pf-radius-sm) !important;
   font-weight: 600;
   letter-spacing: 0.01em;
   padding: 0 20px;
-  box-shadow: 0 12px 26px -12px rgba(224, 79, 211, 0.6);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  transition: background 0.18s ease, opacity 0.18s ease;
 }
 .pf-btn-primary.mat-mdc-flat-button:hover,
 .pf-btn-primary.mat-mdc-raised-button:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.05);
-  box-shadow: 0 16px 30px -12px rgba(224, 79, 211, 0.7);
+  background: var(--pf-primary-hover) !important;
 }
 .pf-btn-primary.mat-mdc-flat-button[disabled],
 .pf-btn-primary.mat-mdc-raised-button[disabled] {
-  opacity: 0.55;
-  filter: saturate(0.6);
-  box-shadow: none;
-  transform: none;
+  opacity: 0.5;
+  background: var(--pf-primary) !important;
 }
 
 .pf-icon-btn {
   width: 40px;
   height: 40px;
-  border-radius: 12px;
+  border-radius: var(--pf-radius-sm);
   border: none;
   cursor: pointer;
   background: transparent;
@@ -344,7 +304,7 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition: background 0.18s ease, color 0.18s ease;
 }
 .pf-icon-btn:hover {
   background: var(--pf-surface-strong);
@@ -355,8 +315,8 @@ body {
 .pf-avatar {
   width: 36px;
   height: 36px;
-  border-radius: 12px;
-  background: var(--pf-aurora);
+  border-radius: var(--pf-radius-sm);
+  background: var(--pf-primary);
   color: #ffffff;
   display: inline-flex;
   align-items: center;
@@ -370,13 +330,12 @@ body {
 .pf-feature-icon {
   width: 46px;
   height: 46px;
-  border-radius: 14px;
-  background: var(--pf-aurora);
+  border-radius: var(--pf-radius-md);
+  background: var(--pf-primary);
   color: #ffffff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 12px 26px -10px rgba(224, 79, 211, 0.55);
   flex: none;
 }
 
@@ -389,7 +348,7 @@ body {
   align-items: center;
   gap: 6px;
   padding: 4px 10px;
-  border-radius: 999px;
+  border-radius: var(--pf-radius-sm);
   font-size: 12px;
   font-weight: 600;
   line-height: 1.4;
@@ -420,7 +379,7 @@ body {
 }
 .pf-badge--instagram {
   color: #d62976;
-  background: linear-gradient(120deg, rgba(244, 146, 51, 0.16), rgba(188, 24, 136, 0.16));
+  background: rgba(214, 41, 118, 0.12);
   border-color: rgba(214, 41, 118, 0.3);
 }
 .pf-badge--tiktok {
@@ -440,7 +399,7 @@ body {
 .pf-badge--sm {
   padding: 2px 7px;
   font-size: 11px;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: default;
 }
 .pf-badge--sm mat-icon {
@@ -453,7 +412,7 @@ body {
 }
 .pf-goal--reputation {
   color: var(--pf-primary);
-  background: color-mix(in srgb, var(--pf-primary) 14%, transparent);
+  background: var(--pf-primary-soft);
 }
 .pf-goal--leadgeneration {
   color: var(--pf-accent);
@@ -483,14 +442,14 @@ body {
 }
 .pf-status--scheduled {
   color: var(--pf-primary);
-  background: color-mix(in srgb, var(--pf-primary) 14%, transparent);
+  background: var(--pf-primary-soft);
 }
 .pf-status--publishing {
   color: var(--pf-warning);
   background: color-mix(in srgb, var(--pf-warning) 14%, transparent);
 }
 .pf-status--publishing::before {
-  animation: pf-pulse 1.2s ease-in-out infinite;
+  animation: pf-blink 1.2s ease-in-out infinite;
 }
 .pf-status--published {
   color: var(--pf-success);
@@ -501,13 +460,13 @@ body {
   background: color-mix(in srgb, var(--pf-danger) 14%, transparent);
 }
 
-@keyframes pf-pulse {
+@keyframes pf-blink {
   0%,
   100% {
-    box-shadow: 0 0 0 0 currentColor;
+    opacity: 1;
   }
   50% {
-    box-shadow: 0 0 0 5px transparent;
+    opacity: 0.35;
   }
 }
 
@@ -612,7 +571,7 @@ body {
   color: var(--pf-text-muted);
   background: var(--pf-surface-strong);
   border: 1px solid var(--pf-border);
-  border-radius: 999px;
+  border-radius: 6px;
   padding: 4px 10px;
 }
 .pf-tag mat-icon {
@@ -757,14 +716,13 @@ body {
   gap: 4px;
   background: var(--pf-surface);
   border: 1px solid var(--pf-border);
-  border-radius: 14px;
+  border-radius: var(--pf-radius-md);
   padding: 6px;
-  box-shadow: var(--pf-shadow-sm);
 }
 .pf-calendar__nav button {
   width: 36px;
   height: 36px;
-  border-radius: 10px;
+  border-radius: var(--pf-radius-sm);
   border: none;
   background: transparent;
   color: var(--pf-text-muted);
@@ -772,7 +730,7 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.18s, color 0.18s;
 }
 .pf-calendar__nav button:hover {
   background: var(--pf-surface-strong);
@@ -806,12 +764,12 @@ body {
   min-height: 108px;
   background: var(--pf-surface);
   border: 1px solid var(--pf-border);
-  border-radius: 14px;
+  border-radius: var(--pf-radius-md);
   padding: 10px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  transition: border-color 0.18s, background 0.18s;
 }
 .pf-calendar__day:hover {
   border-color: var(--pf-border-strong);
@@ -822,7 +780,6 @@ body {
 }
 .pf-calendar__day--today {
   border-color: var(--pf-primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pf-primary) 16%, transparent);
 }
 .pf-calendar__num {
   font-size: 13px;
@@ -833,12 +790,11 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 9px;
+  border-radius: 6px;
 }
 .pf-calendar__day--today .pf-calendar__num {
-  background: var(--pf-aurora);
+  background: var(--pf-primary);
   color: #ffffff;
-  box-shadow: 0 6px 14px -6px rgba(224, 79, 211, 0.6);
 }
 .pf-calendar__slots {
   display: flex;
@@ -905,15 +861,14 @@ body {
 
 .pf-result {
   position: relative;
-  overflow: hidden;
   padding: 22px;
 }
 .pf-result::before {
   content: '';
   position: absolute;
   inset: 0 0 auto 0;
-  height: 3px;
-  background: var(--pf-aurora);
+  height: 2px;
+  background: var(--pf-primary);
 }
 .pf-result__head {
   display: flex;
@@ -952,14 +907,7 @@ body {
 .pf-sidebar.open {
   transform: translateX(0);
 }
-.pf-sidebar__glow {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(420px 320px at 0% 0%, var(--pf-sidebar-glow), transparent 70%);
-}
 .pf-sidebar__inner {
-  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -977,13 +925,12 @@ body {
 .pf-logo {
   width: 40px;
   height: 40px;
-  border-radius: 12px;
-  background: var(--pf-aurora);
+  border-radius: var(--pf-radius-sm);
+  background: var(--pf-primary);
   color: #ffffff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 10px 24px -8px rgba(224, 79, 211, 0.6);
   flex: none;
 }
 .pf-brand__text {
@@ -996,10 +943,7 @@ body {
   font-size: 19px;
   font-weight: 700;
   letter-spacing: -0.01em;
-  background: var(--pf-aurora);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--pf-text);
 }
 .pf-brand__sub {
   font-size: 11px;
@@ -1015,19 +959,17 @@ body {
   justify-content: center;
   gap: 8px;
   padding: 12px 16px;
-  border-radius: 14px;
-  background: var(--pf-aurora);
+  border-radius: var(--pf-radius-sm);
+  background: var(--pf-primary);
   color: #ffffff;
   font-weight: 600;
   font-size: 14px;
   text-decoration: none;
-  box-shadow: 0 14px 30px -12px rgba(224, 79, 211, 0.55);
-  transition: transform 0.2s ease, filter 0.2s ease;
+  transition: background 0.18s ease;
   margin-bottom: 26px;
 }
 .pf-cta:hover {
-  transform: translateY(-2px);
-  filter: brightness(1.06);
+  background: var(--pf-primary-hover);
 }
 
 .pf-sidebar__label {
@@ -1050,12 +992,12 @@ body {
   align-items: center;
   gap: 12px;
   padding: 10px 12px;
-  border-radius: 12px;
+  border-radius: var(--pf-radius-sm);
   color: var(--pf-sidebar-text);
   text-decoration: none;
   font-weight: 500;
   font-size: 14px;
-  transition: background 0.2s, color 0.2s, transform 0.2s;
+  transition: background 0.18s, color 0.18s;
 }
 .pf-nav__item mat-icon {
   font-size: 20px;
@@ -1066,8 +1008,7 @@ body {
 }
 .pf-nav__item.active {
   color: #ffffff;
-  background: var(--pf-aurora);
-  box-shadow: 0 10px 22px -10px rgba(224, 79, 211, 0.6);
+  background: var(--pf-primary);
 }
 
 .pf-sidebar__footer {
@@ -1079,7 +1020,7 @@ body {
   align-items: center;
   gap: 12px;
   padding: 10px;
-  border-radius: 14px;
+  border-radius: var(--pf-radius-md);
   background: var(--pf-sidebar-user-bg);
   border: 1px solid var(--pf-sidebar-user-border);
 }
@@ -1098,11 +1039,6 @@ body {
   font-size: 11.5px;
   color: var(--pf-sidebar-text-dim);
 }
-.pf-user__gear {
-  margin-left: auto;
-  color: var(--pf-sidebar-text-dim);
-  font-size: 19px;
-}
 
 /* ================= Header ================= */
 .pf-header {
@@ -1112,9 +1048,7 @@ body {
   height: 72px;
   padding: 0 24px;
   flex: none;
-  background: var(--pf-glass);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  background: var(--pf-surface);
   border-bottom: 1px solid var(--pf-border);
   position: relative;
   z-index: 20;
@@ -1132,11 +1066,11 @@ body {
   align-items: center;
   gap: 10px;
   padding: 9px 14px;
-  border-radius: 13px;
+  border-radius: var(--pf-radius-sm);
   background: var(--pf-surface-strong);
-  border: 1px solid var(--pf-border);
+  border: 1px solid transparent;
   color: var(--pf-text-faint);
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.18s, background 0.18s;
 }
 .pf-search mat-icon {
   font-size: 18px;
@@ -1155,7 +1089,7 @@ body {
 }
 .pf-search:focus-within {
   border-color: var(--pf-primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pf-primary) 16%, transparent);
+  background: var(--pf-surface);
 }
 .pf-search kbd {
   font-family: inherit;
@@ -1179,7 +1113,7 @@ body {
   height: 7px;
   border-radius: 50%;
   background: var(--pf-accent);
-  box-shadow: 0 0 0 2px var(--pf-glass);
+  box-shadow: 0 0 0 2px var(--pf-surface);
 }
 
 /* ================= Responsive ================= */
@@ -1226,47 +1160,23 @@ body {
 
 /* ================= Auth / login ================= */
 .pf-auth {
-  position: relative;
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
-  overflow: hidden;
   background: var(--pf-bg);
-}
-.pf-auth__glow {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(90px);
-  pointer-events: none;
-}
-.pf-auth__glow--1 {
-  width: 560px;
-  height: 560px;
-  top: -180px;
-  right: -120px;
-  background: radial-gradient(circle, var(--pf-bg-glow-1), transparent 70%);
-}
-.pf-auth__glow--2 {
-  width: 520px;
-  height: 520px;
-  bottom: -200px;
-  left: -140px;
-  background: radial-gradient(circle, var(--pf-bg-glow-2), transparent 70%);
 }
 .pf-auth__card.mat-mdc-card {
   position: relative;
   width: 100%;
   max-width: 420px;
   padding: 36px 34px 28px;
-  background: var(--pf-glass);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--pf-surface);
   border: 1px solid var(--pf-border);
   border-radius: var(--pf-radius-lg);
-  box-shadow: var(--pf-shadow-lg);
-  animation: pf-fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  box-shadow: var(--pf-shadow-sm);
+  animation: pf-fade-up 0.35s ease both;
 }
 .pf-auth__brand {
   padding: 0;
@@ -1299,7 +1209,7 @@ body {
 .pf-auth__error {
   margin: 4px 0 12px;
   padding: 10px 14px;
-  border-radius: 10px;
+  border-radius: var(--pf-radius-sm);
   font-size: 13px;
   color: var(--pf-danger);
   background: color-mix(in srgb, var(--pf-danger) 12%, transparent);
@@ -1324,7 +1234,7 @@ body {
 .pf-alert {
   margin: 0 0 18px;
   padding: 12px 16px;
-  border-radius: 12px;
+  border-radius: var(--pf-radius-sm);
   font-size: 13.5px;
   color: var(--pf-danger);
   background: color-mix(in srgb, var(--pf-danger) 10%, transparent);
@@ -1356,7 +1266,7 @@ body {
   gap: 10px;
   margin-left: 8px;
   padding: 6px 8px 6px 6px;
-  border-radius: 14px;
+  border-radius: var(--pf-radius-md);
   background: var(--pf-surface-strong);
   border: 1px solid var(--pf-border);
 }
@@ -1387,13 +1297,88 @@ body {
   height: 32px;
   color: var(--pf-text-muted);
 }
-.pf-tenant-select.mat-mdc-form-field {
-  width: 190px;
-  max-width: 30vw;
-  font-size: 13px;
+.pf-workspace {
+  display: flex;
+  align-items: center;
 }
-.pf-tenant-select.mat-mdc-form-field .mat-mdc-text-field-wrapper {
-  padding: 0 8px;
+.pf-workspace__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  padding: 0 8px 0 12px;
+  border: 1px solid var(--pf-border);
+  border-radius: var(--pf-radius-sm);
+  background: var(--pf-surface-strong);
+  color: var(--pf-text);
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+.pf-workspace__btn:hover {
+  border-color: var(--pf-border-strong);
+  background: var(--pf-surface);
+}
+.pf-workspace__btn:focus-visible {
+  outline: 2px solid var(--pf-primary);
+  outline-offset: 2px;
+}
+.pf-workspace__text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.1;
+  min-width: 0;
+}
+.pf-workspace__eyebrow {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pf-text-faint);
+  line-height: 1;
+}
+.pf-workspace__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--pf-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+.pf-workspace__chevron {
+  font-size: 18px !important;
+  width: 18px;
+  height: 18px;
+  color: var(--pf-text-muted);
+  flex: none;
+}
+.pf-workspace__check {
+  margin-left: auto;
+  color: var(--pf-primary);
+  font-size: 18px !important;
+}
+
+/* Flat menu panel */
+.cdk-overlay-pane .mat-mdc-menu-panel.pf-workspace__menu,
+.mat-mdc-menu-panel.pf-workspace__menu {
+  background: var(--pf-surface) !important;
+  border: 1px solid var(--pf-border);
+  border-radius: var(--pf-radius-sm) !important;
+  box-shadow: none !important;
+}
+.mat-mdc-menu-panel.pf-workspace__menu .mat-mdc-menu-content {
+  padding: 6px !important;
+}
+.mat-mdc-menu-panel.pf-workspace__menu .mat-mdc-menu-item {
+  border-radius: 6px;
+  font-size: 13px;
+  min-height: 36px;
+}
+.mat-mdc-menu-panel.pf-workspace__menu .mat-mdc-menu-item .mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
 }
 
 /* ================= Tenants ================= */
@@ -1415,7 +1400,7 @@ body {
 .pf-feature-icon--sm {
   width: 38px;
   height: 38px;
-  border-radius: 12px;
+  border-radius: var(--pf-radius-sm);
   font-size: 18px;
 }
 .tenant-card__name {
@@ -1476,7 +1461,7 @@ body {
 }
 .pf-table {
   border: 1px solid var(--pf-border);
-  border-radius: 14px;
+  border-radius: var(--pf-radius-md);
   overflow: hidden;
   margin-top: 8px;
 }
@@ -1557,7 +1542,7 @@ body {
 }
 .pf-ai-image img {
   width: 100%;
-  border-radius: 14px;
+  border-radius: var(--pf-radius-md);
   border: 1px solid var(--pf-border);
   display: block;
   margin-bottom: 12px;
@@ -1591,7 +1576,7 @@ body {
   font-weight: 600;
   color: var(--pf-warning);
   background: color-mix(in srgb, var(--pf-warning) 12%, transparent);
-  border-radius: 999px;
+  border-radius: var(--pf-radius-sm);
   padding: 4px 10px;
 }
 
@@ -1606,9 +1591,9 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 9px;
+  border-radius: var(--pf-radius-sm);
   color: var(--pf-sidebar-text-dim);
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.18s, color 0.18s;
 }
 .pf-user__gear:hover {
   background: var(--pf-sidebar-hover);
@@ -1623,7 +1608,7 @@ body {
   .pf-user-chip__meta {
     display: none;
   }
-  .pf-tenant-select.mat-mdc-form-field {
+  .pf-workspace {
     display: none;
   }
 }

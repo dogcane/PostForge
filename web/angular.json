@@ -69,6 +69,15 @@
               ],
               "outputHashing": "all"
             },
+            "demo": {
+              "outputPath": "dist/web-demo",
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.demo.ts"
+                }
+              ]
+            },
             "development": {
               "optimization": false,
               "extractLicenses": false,
@@ -85,6 +94,9 @@
           "configurations": {
             "production": {
               "buildTarget": "web:build:production"
+            },
+            "demo": {
+              "buildTarget": "web:build:demo"
             },
             "development": {
               "buildTarget": "web:build:development"

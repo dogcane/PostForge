@@ -21,6 +21,13 @@
       "url": "http://localhost:4200/"
     },
     {
+      "name": "ng serve (web, demo)",
+      "type": "chrome",
+      "request": "launch",
+      "preLaunchTask": "npm: start:demo (web)",
+      "url": "http://localhost:4200/"
+    },
+    {
       "name": "ng test (web)",
       "type": "chrome",
       "request": "launch",
