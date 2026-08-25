@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace PostForge.Infrastructure.Identity;
 
@@ -17,8 +18,18 @@ public static class SuperUserSeeder
         var identityDbContext = sp.GetRequiredService<AppIdentityDbContext>();
         await identityDbContext.Database.EnsureCreatedAsync();
 
-        var email = configuration["Auth:SuperUser:Email"] ?? "admin@postforge.dev";
-        var password = configuration["Auth:SuperUser:Password"] ?? "Admin!12345";
+        var superUser = configuration.GetSection("Auth:SuperUser").Get<SuperUserOptions>();
+        var email = superUser?.Email;
+        var password = superUser?.Password;
+
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+        {
+            var logger = sp.GetService<ILoggerFactory>()?.CreateLogger("SuperUserSeeder");
+            logger?.LogWarning(
+                "Auth:SuperUser:Email or Auth:SuperUser:Password not configured — skipping super user seeding. "
+                + "Set via environment variables (Auth__SuperUser__Email / Auth__SuperUser__Password), user-secrets, or Key Vault.");
+            return;
+        }
 
         var userManager = sp.GetRequiredService<UserManager<ApplicationUser>>();
         if (await userManager.FindByEmailAsync(email) is not null)

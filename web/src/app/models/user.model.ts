@@ -8,9 +8,15 @@ export interface LoginRequest {
 export interface LoginResult {
   token: string;
   expiresAtUtc: string;
+  refreshToken: string;
+  refreshExpiresAtUtc: string;
   userId: string;
   email: string;
   isSuperUser: boolean;
+}
+
+export interface RefreshTokenRequest {
+  refreshToken: string;
 }
 
 export interface CurrentUser {

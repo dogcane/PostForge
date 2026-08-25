@@ -2,14 +2,9 @@ using PostForge.Domain.Providers;
 
 namespace PostForge.Infrastructure.Providers.Ai;
 
-public class AiTextProviderRegistry : IProviderRegistry<IAiTextProvider>
+public class AiTextProviderRegistry(IEnumerable<IAiTextProvider> providers) : IProviderRegistry<IAiTextProvider>
 {
-    private readonly Dictionary<string, IAiTextProvider> _providers;
-
-    public AiTextProviderRegistry(IEnumerable<IAiTextProvider> providers)
-    {
-        _providers = providers.ToDictionary(p => p.ProviderKey, StringComparer.OrdinalIgnoreCase);
-    }
+    private readonly Dictionary<string, IAiTextProvider> _providers = providers.ToDictionary(p => p.ProviderKey, StringComparer.OrdinalIgnoreCase);
 
     public IReadOnlyCollection<string> AvailableProviderKeys => _providers.Keys;
 

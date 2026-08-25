@@ -94,11 +94,36 @@ infra/
 
 Target `net10.0` → C# 14 di default (niente `<LangVersion>` esplicito). Usare attivamente le feature moderne, niente codice "legacy" se esiste l'equivalente nuovo:
 
-- **Primary constructors** per classi con dipendenze iniettate (handlers, services, provider, registry):
+- **Primary constructors (obbligatorio)** — usare **sempre** il primary constructor C# 12/14 per **ogni** classe con dipendenze iniettate o forwarding al `base(...)` quando il linguaggio lo consente. Vale per **tutti** i progetti/layer (Domain escluso per le entity, vedi sotto): handlers, services, provider, registry, **repository (`CampaignRepository`, `PostRepository`, `TenantRepository`, ecc. + `TenantScopedRepository` dove possibile — vedi eccezione `this` sotto)**, `DbContext`, controller, middleware, `IHostedService`, `BackgroundService`, sender/messaging, ecc. È **vietato** introdurre nuovo codice con il pattern `private readonly + ctor { _field = param; }` o `Ctor(...) : base(...) { }` a corpo vuoto quando esiste l'equivalente primary constructor. Quando il costruttore contiene logica che **non accede a `this`** (es. `new Client(http, options.Value)`), convertirla in inizializzatore di campo. Quando la logica **accede a `this`** (es. `TenantScopedRepository` che imposta `DbContext.CurrentTenantId` dopo `base(dataContext)`), gli inizializzatori di campo non possono referenziare `this` (`CS0236`): mantenere il costruttore tradizionale — è l'unica eccezione ammessa oltre alle entity:
 
 ```csharp
-public sealed class FacebookProvider(HttpClient httpClient, IOptions<FacebookProviderOptions> options)
-    : ISocialPlatformProvider
+// Repository — forwarding al base
+public sealed class CampaignRepository(IDataContext dataContext, ITenantContext tenantContext)
+    : TenantScopedRepository<Campaign, Guid>(dataContext, tenantContext), ICampaignRepository;
+
+// DbContext
+public class PostForgeDbContext(DbContextOptions<PostForgeDbContext> options) : DbContext(options)
+
+// Controller — usa il parametro direttamente, niente campo _mediator
+public class AiController(IMediator mediator) : ControllerBase
+
+// Middleware / HostedService
+public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IMiddleware
+public sealed class QuartzHostedService(IScheduler scheduler, ILogger<QuartzHostedService> logger) : IHostedService
+
+// Registry / messaging
+public class AiTextProviderRegistry(IEnumerable<IAiTextProvider> providers) : IProviderRegistry<IAiTextProvider>
+{
+    private readonly Dictionary<string, IAiTextProvider> _providers = providers.ToDictionary(p => p.ProviderKey, StringComparer.OrdinalIgnoreCase);
+}
+public class ServiceBusPublishJobSender(ServiceBusSender sender) : IPublishJobSender
+
+// Provider con inizializzazione derivata
+public class FacebookProvider(HttpClient httpClient, IOptions<FacebookProviderOptions> options) : ISocialPlatformProvider
+{
+    private readonly FacebookProviderOptions _options = options.Value;
+    private readonly FacebookGraphApiClient _client = new(httpClient, options.Value);
+}
 ```
 
 - **`field` keyword (C# 14)** per semi-auto properties quando serve un backing field con logica nel getter/setter — niente campo privato + property separati se `field` basta.

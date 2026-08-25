@@ -7,7 +7,7 @@ using PostForge.Providers.Facebook.Models;
 
 namespace PostForge.Providers.Facebook;
 
-internal sealed class FacebookGraphApiClient
+internal sealed class FacebookGraphApiClient(HttpClient http, FacebookProviderOptions options)
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 
@@ -16,15 +16,6 @@ internal sealed class FacebookGraphApiClient
 
     private const string PageInsightsMetrics =
         "page_fans,page_profile_views,page_impressions,page_impressions_unique,page_engaged_users";
-
-    private readonly HttpClient _http;
-    private readonly FacebookProviderOptions _options;
-
-    public FacebookGraphApiClient(HttpClient http, FacebookProviderOptions options)
-    {
-        _http = http;
-        _options = options;
-    }
 
     public async Task<OAuthTokenResponse> ExchangeCodeForTokenAsync(string code, string redirectUri, CancellationToken ct)
     {
@@ -215,13 +206,13 @@ internal sealed class FacebookGraphApiClient
             if (hasBody)
             {
                 formParams["access_token"] = accessToken;
-                if (_options.EnableAppSecretProof)
+                if (options.EnableAppSecretProof)
                     formParams["appsecret_proof"] = ComputeAppSecretProof(accessToken);
             }
             else
             {
                 queryParams["access_token"] = accessToken;
-                if (_options.EnableAppSecretProof)
+                if (options.EnableAppSecretProof)
                     queryParams["appsecret_proof"] = ComputeAppSecretProof(accessToken);
             }
         }
@@ -232,7 +223,7 @@ internal sealed class FacebookGraphApiClient
         if (hasBody)
             request.Content = new FormUrlEncodedContent(formParams);
 
-        using var response = await _http.SendAsync(request, ct).ConfigureAwait(false);
+        using var response = await http.SendAsync(request, ct).ConfigureAwait(false);
         var body = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
 
         if (!response.IsSuccessStatusCode)
@@ -251,7 +242,7 @@ internal sealed class FacebookGraphApiClient
 
     private string BuildUrl(string endpoint, IReadOnlyDictionary<string, string> queryParams)
     {
-        var version = NormalizeApiVersion(_options.ApiVersion);
+        var version = NormalizeApiVersion(options.ApiVersion);
         var path = queryParams.Count == 0
             ? $"{version}/{endpoint}"
             : $"{version}/{endpoint}?{string.Join("&", queryParams.Select(kv => $"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(kv.Value)}"))}";
@@ -296,11 +287,12 @@ internal sealed class FacebookGraphApiClient
         return new FacebookGraphApiException($"Facebook Graph API returned HTTP {(int)statusCode} ({statusCode}).", statusCode: statusCode);
     }
 
-    private string RequireAppId() => string.IsNullOrWhiteSpace(_options.AppId)
+    private string RequireAppId() => string.IsNullOrWhiteSpace(options.AppId)
         ? throw new InvalidOperationException($"'{FacebookProviderOptions.SectionName}:AppId' is not configured.")
-        : _options.AppId;
+        : options.AppId;
 
-    private string RequireAppSecret() => string.IsNullOrWhiteSpace(_options.AppSecret)
+    private string RequireAppSecret() => string.IsNullOrWhiteSpace(options.AppSecret)
         ? throw new InvalidOperationException($"'{FacebookProviderOptions.SectionName}:AppSecret' is not configured.")
-        : _options.AppSecret;
+        : options.AppSecret;
 }
+

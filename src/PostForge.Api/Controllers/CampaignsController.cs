@@ -14,14 +14,8 @@ namespace PostForge.Api.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/v1/campaigns")]
-public class CampaignsController : ControllerBase
+public class CampaignsController(IMediator mediator) : ControllerBase
 {
-    private readonly IMediator _mediator;
-
-    public CampaignsController(IMediator mediator)
-    {
-        _mediator = mediator;
-    }
 
     [HttpGet]
     public async Task<ActionResult<List<CampaignDto>>> GetAll(
@@ -31,7 +25,7 @@ public class CampaignsController : ControllerBase
         [FromQuery] DateTime? dateTo)
     {
         var query = new GetAllCampaignsQuery(goal, channel, dateFrom, dateTo);
-        var campaigns = await _mediator.Send(query);
+        var campaigns = await mediator.Send(query);
         return Ok(campaigns);
     }
 
@@ -39,7 +33,7 @@ public class CampaignsController : ControllerBase
     public async Task<ActionResult<CampaignDto>> GetById(Guid id)
     {
         var query = new GetCampaignByIdQuery(id);
-        var campaign = await _mediator.Send(query);
+        var campaign = await mediator.Send(query);
 
         if (campaign is null)
             return NotFound();
@@ -50,7 +44,7 @@ public class CampaignsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Guid>> Create([FromBody] CreateCampaignCommand command)
     {
-        var campaignId = await _mediator.Send(command);
+        var campaignId = await mediator.Send(command);
         return CreatedAtAction(nameof(GetById), new { id = campaignId }, campaignId);
     }
 
@@ -60,14 +54,14 @@ public class CampaignsController : ControllerBase
         if (id != command.Id)
             return BadRequest("Id mismatch between route and body.");
 
-        await _mediator.Send(command);
+        await mediator.Send(command);
         return NoContent();
     }
 
     [HttpDelete("{id:guid}")]
     public async Task<ActionResult> Delete(Guid id)
     {
-        await _mediator.Send(new DeleteCampaignCommand(id));
+        await mediator.Send(new DeleteCampaignCommand(id));
         return NoContent();
     }
 }

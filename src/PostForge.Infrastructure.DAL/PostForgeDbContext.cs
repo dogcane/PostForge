@@ -5,13 +5,9 @@ using PostForge.Domain.ValueObjects;
 
 namespace PostForge.Infrastructure.DAL;
 
-public class PostForgeDbContext : DbContext
+public class PostForgeDbContext(DbContextOptions<PostForgeDbContext> options) : DbContext(options)
 {
     public Guid? CurrentTenantId { get; set; }
-
-    public PostForgeDbContext(DbContextOptions<PostForgeDbContext> options) : base(options)
-    {
-    }
 
     public DbSet<Post> Posts => Set<Post>();
     public DbSet<Campaign> Campaigns => Set<Campaign>();

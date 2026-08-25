@@ -6,11 +6,9 @@ using PostForge.Infrastructure.Identity.Tenancy;
 
 namespace PostForge.Api.Middleware;
 
-public sealed class TenantResolutionMiddleware(
-    RequestDelegate next,
-    ApplicationTenantContext tenantContext)
+public sealed class TenantResolutionMiddleware(RequestDelegate next)
 {
-    public async Task InvokeAsync(HttpContext context)
+    public async Task InvokeAsync(HttpContext context, ApplicationTenantContext tenantContext)
     {
         if (context.User.Identity?.IsAuthenticated == true)
         {

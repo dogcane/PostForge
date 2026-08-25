@@ -9,7 +9,8 @@ public abstract class TenantScopedRepository<TEntity, TKey> : EntityFrameworkRep
     where TEntity : class, IAggregateRoot<TKey>
     where TKey : IEquatable<TKey>
 {
-    protected TenantScopedRepository(IDataContext dataContext, ITenantContext tenantContext) : base(dataContext)
+    protected TenantScopedRepository(IDataContext dataContext, ITenantContext tenantContext)
+        : base(dataContext)
     {
         if (DbContext is PostForgeDbContext postForgeDbContext)
             postForgeDbContext.CurrentTenantId = tenantContext.TenantId;

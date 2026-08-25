@@ -3,15 +3,8 @@ using PostForge.Infrastructure.Messaging;
 
 namespace PostForge.Infrastructure.Messaging.ServiceBus;
 
-public class ServiceBusPublishJobSender : IPublishJobSender
+public class ServiceBusPublishJobSender(ServiceBusSender sender) : IPublishJobSender
 {
-    private readonly ServiceBusSender _sender;
-
-    public ServiceBusPublishJobSender(ServiceBusSender sender)
-    {
-        _sender = sender;
-    }
-
     public async Task SendPublishJobAsync(Guid slotId, CancellationToken ct)
     {
         var message = new ServiceBusMessage
@@ -21,6 +14,6 @@ public class ServiceBusPublishJobSender : IPublishJobSender
             Body = BinaryData.FromObjectAsJson(new { SlotId = slotId })
         };
 
-        await _sender.SendMessageAsync(message, ct);
+        await sender.SendMessageAsync(message, ct);
     }
 }

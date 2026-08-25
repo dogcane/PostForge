@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -33,5 +34,24 @@ public sealed class JwtTokenService(IOptions<AuthOptions> options) : IJwtTokenSe
             signingCredentials: credentials);
 
         return (new JwtSecurityTokenHandler().WriteToken(token), expiresAtUtc);
+    }
+
+    public string CreateRefreshToken()
+    {
+        var bytes = RandomNumberGenerator.GetBytes(_options.RefreshTokenLengthBytes);
+        return Base64UrlEncode(bytes);
+    }
+
+    public string HashToken(string token)
+    {
+        var bytes = Encoding.UTF8.GetBytes(token);
+        var hash = SHA256.HashData(bytes);
+        return Convert.ToHexString(hash);
+    }
+
+    private static string Base64UrlEncode(byte[] bytes)
+    {
+        var base64 = Convert.ToBase64String(bytes);
+        return base64.Replace('+', '-').Replace('/', '_').TrimEnd('=');
     }
 }

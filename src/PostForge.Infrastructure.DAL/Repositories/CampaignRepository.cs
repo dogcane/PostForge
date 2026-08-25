@@ -4,7 +4,5 @@ using PostForge.Domain.Interfaces;
 
 namespace PostForge.Infrastructure.DAL.Repositories;
 
-public class CampaignRepository : TenantScopedRepository<Campaign, Guid>, ICampaignRepository
-{
-    public CampaignRepository(IDataContext dataContext, ITenantContext tenantContext) : base(dataContext, tenantContext) { }
-}
+public class CampaignRepository(IDataContext dataContext, ITenantContext tenantContext)
+    : TenantScopedRepository<Campaign, Guid>(dataContext, tenantContext), ICampaignRepository;

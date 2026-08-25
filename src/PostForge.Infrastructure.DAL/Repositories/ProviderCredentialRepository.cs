@@ -4,7 +4,5 @@ using PostForge.Domain.Interfaces;
 
 namespace PostForge.Infrastructure.DAL.Repositories;
 
-public class ProviderCredentialRepository : TenantScopedRepository<ProviderCredential, Guid>, IProviderCredentialRepository
-{
-    public ProviderCredentialRepository(IDataContext dataContext, ITenantContext tenantContext) : base(dataContext, tenantContext) { }
-}
+public class ProviderCredentialRepository(IDataContext dataContext, ITenantContext tenantContext)
+    : TenantScopedRepository<ProviderCredential, Guid>(dataContext, tenantContext), IProviderCredentialRepository;

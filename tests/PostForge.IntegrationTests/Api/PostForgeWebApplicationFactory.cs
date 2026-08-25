@@ -36,6 +36,8 @@ public class PostForgeWebApplicationFactory : WebApplicationFactory<PostsControl
                 ["Auth:Audience"] = "PostForge.Api",
                 ["Auth:SecretKey"] = "test-secret-key-with-at-least-32-characters!!",
                 ["Auth:ExpiresInMinutes"] = "60",
+                ["Auth:RefreshTokenExpiresInDays"] = "7",
+                ["Auth:RefreshTokenLengthBytes"] = "64",
                 ["Auth:SuperUser:Email"] = SuperUserEmail,
                 ["Auth:SuperUser:Password"] = SuperUserPassword
             });

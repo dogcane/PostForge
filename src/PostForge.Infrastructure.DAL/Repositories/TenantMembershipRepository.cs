@@ -4,8 +4,5 @@ using PostForge.Domain.Interfaces;
 
 namespace PostForge.Infrastructure.DAL.Repositories;
 
-public class TenantMembershipRepository : TenantScopedRepository<TenantMembership, Guid>, ITenantMembershipRepository
-{
-    public TenantMembershipRepository(IDataContext dataContext, ITenantContext tenantContext)
-        : base(dataContext, tenantContext) { }
-}
+public class TenantMembershipRepository(IDataContext dataContext, ITenantContext tenantContext)
+    : TenantScopedRepository<TenantMembership, Guid>(dataContext, tenantContext), ITenantMembershipRepository;

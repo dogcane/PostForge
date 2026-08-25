@@ -4,7 +4,5 @@ using PostForge.Domain.Interfaces;
 
 namespace PostForge.Infrastructure.DAL.Repositories;
 
-public class SocialAccountRepository : TenantScopedRepository<SocialAccount, Guid>, ISocialAccountRepository
-{
-    public SocialAccountRepository(IDataContext dataContext, ITenantContext tenantContext) : base(dataContext, tenantContext) { }
-}
+public class SocialAccountRepository(IDataContext dataContext, ITenantContext tenantContext)
+    : TenantScopedRepository<SocialAccount, Guid>(dataContext, tenantContext), ISocialAccountRepository;

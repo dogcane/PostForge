@@ -10,26 +10,20 @@ namespace PostForge.Api.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/v1/ai")]
-public class AiController : ControllerBase
+public class AiController(IMediator mediator) : ControllerBase
 {
-    private readonly IMediator _mediator;
-
-    public AiController(IMediator mediator)
-    {
-        _mediator = mediator;
-    }
 
     [HttpPost("caption")]
     public async Task<ActionResult<CaptionResultDto>> GenerateCaption([FromBody] GenerateCaptionCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await mediator.Send(command);
         return Ok(result);
     }
 
     [HttpPost("image")]
     public async Task<ActionResult<ImageResultDto>> GenerateImage([FromBody] GenerateImageCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await mediator.Send(command);
         return Ok(result);
     }
 }

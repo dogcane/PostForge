@@ -15,14 +15,8 @@ namespace PostForge.Api.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/v1/posts")]
-public class PostsController : ControllerBase
+public class PostsController(IMediator mediator) : ControllerBase
 {
-    private readonly IMediator _mediator;
-
-    public PostsController(IMediator mediator)
-    {
-        _mediator = mediator;
-    }
 
     [HttpGet]
     public async Task<ActionResult<List<PostDto>>> GetAll(
@@ -32,7 +26,7 @@ public class PostsController : ControllerBase
         [FromQuery] DateTime? dateTo)
     {
         var query = new GetAllPostsQuery(status, platform, dateFrom, dateTo);
-        var posts = await _mediator.Send(query);
+        var posts = await mediator.Send(query);
         return Ok(posts);
     }
 
@@ -40,7 +34,7 @@ public class PostsController : ControllerBase
     public async Task<ActionResult<PostDto>> GetById(Guid id)
     {
         var query = new GetPostByIdQuery(id);
-        var post = await _mediator.Send(query);
+        var post = await mediator.Send(query);
 
         if (post is null)
             return NotFound();
@@ -51,7 +45,7 @@ public class PostsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Guid>> Create([FromBody] CreatePostCommand command)
     {
-        var postId = await _mediator.Send(command);
+        var postId = await mediator.Send(command);
         return CreatedAtAction(nameof(GetById), new { id = postId }, postId);
     }
 
@@ -61,14 +55,14 @@ public class PostsController : ControllerBase
         if (id != command.Id)
             return BadRequest("Id mismatch between route and body.");
 
-        await _mediator.Send(command);
+        await mediator.Send(command);
         return NoContent();
     }
 
     [HttpDelete("{id:guid}")]
     public async Task<ActionResult> Delete(Guid id)
     {
-        await _mediator.Send(new DeletePostCommand(id));
+        await mediator.Send(new DeletePostCommand(id));
         return NoContent();
     }
 
@@ -78,7 +72,7 @@ public class PostsController : ControllerBase
         if (id != command.PostId)
             return BadRequest("Id mismatch between route and body.");
 
-        await _mediator.Send(command);
+        await mediator.Send(command);
         return NoContent();
     }
 }

@@ -7,7 +7,8 @@ var tags = {
   project: 'PostForge'
 }
 
-var sqlAdminPassword = 'P@ssw0rd-${uniqueString(resourceGroup().id)}'
+@secure()
+param postgresAdminPassword string = 'P@ssw0rd-${uniqueString(resourceGroup().id)}'
 
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: 'id-${environmentName}-postforge'
@@ -69,8 +70,16 @@ resource appService 'Microsoft.Web/sites@2023-01-01' = {
           value: keyVault.properties.vaultUri
         }
         {
-          name: 'AZURE_SQL_CONNECTION_STRING'
-          value: 'Server=tcp:${sqlServer.properties.fullyQualifiedDomainName},1433;Database=${sqlDatabase.name};Authentication=Active Directory Managed Identity;User Id=${managedIdentity.properties.clientId};'
+          name: 'ConnectionStrings__PostForgeDb'
+          value: 'Host=${postgresServer.properties.fullyQualifiedDomainName};Port=5432;Database=${postgresDatabase.name};Username=${postgresServer.properties.administratorLogin};Password=${postgresAdminPassword};Ssl Mode=Require;Trust Server Certificate=true'
+        }
+        {
+          name: 'AZURE_POSTGRES_HOST'
+          value: postgresServer.properties.fullyQualifiedDomainName
+        }
+        {
+          name: 'AZURE_POSTGRES_DATABASE'
+          value: postgresDatabase.name
         }
         {
           name: 'AZURE_STORAGE_ACCOUNT'
@@ -90,51 +99,59 @@ resource appService 'Microsoft.Web/sites@2023-01-01' = {
   tags: tags
 }
 
-resource sqlServer 'Microsoft.Sql/servers@2023-08-01-preview' = {
-  name: 'sql-${environmentName}-postforge'
+resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2024-08-01' = {
+  name: 'psql-${environmentName}-postforge'
   location: location
+  sku: {
+    name: 'Standard_B1ms'
+    tier: 'Burstable'
+  }
   properties: {
+    version: '16'
     administratorLogin: 'postforgeadmin'
-    administratorLoginPassword: sqlAdminPassword
-    minimalTlsVersion: '1.2'
-    publicNetworkAccess: 'Enabled'
+    administratorLoginPassword: postgresAdminPassword
+    storage: {
+      storageSizeGB: 32
+      tier: 'P4'
+      autoGrow: 'Disabled'
+    }
+    network: {
+      publicNetworkAccess: 'Enabled'
+    }
+    authConfig: {
+      activeDirectoryAuth: 'Disabled'
+      passwordAuth: 'Enabled'
+    }
+    backup: {
+      backupRetentionDays: 7
+      geoRedundantBackup: 'Disabled'
+    }
+    highAvailability: {
+      mode: 'Disabled'
+    }
+    maintenanceWindow: {
+      customWindow: 'Disabled'
+    }
   }
   tags: tags
 }
 
-resource sqlFirewallRule 'Microsoft.Sql/servers/firewallRules@2023-08-01-preview' = {
+resource postgresFirewallRule 'Microsoft.DBforPostgreSQL/flexibleServers/firewallRules@2024-08-01' = {
   name: 'AllowAzureServices'
-  parent: sqlServer
+  parent: postgresServer
   properties: {
     startIpAddress: '0.0.0.0'
     endIpAddress: '0.0.0.0'
   }
 }
 
-resource sqlAdmin 'Microsoft.Sql/servers/administrators@2023-08-01-preview' = {
-  name: 'ActiveDirectory'
-  parent: sqlServer
-  properties: {
-    administratorType: 'ActiveDirectory'
-    login: managedIdentity.name
-    sid: managedIdentity.properties.principalId
-    tenantId: subscription().tenantId
-  }
-}
-
-resource sqlDatabase 'Microsoft.Sql/servers/databases@2023-08-01-preview' = {
+resource postgresDatabase 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2024-08-01' = {
   name: 'postforge-db'
-  location: location
-  parent: sqlServer
-  sku: {
-    name: 'Basic'
-    tier: 'Basic'
-  }
+  parent: postgresServer
   properties: {
-    collation: 'SQL_Latin1_General_CP1_CI_AS'
-    maxSizeBytes: 2147483648
+    charset: 'UTF8'
+    collation: 'en_US.utf8'
   }
-  tags: tags
 }
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
@@ -217,8 +234,10 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
 
 output appServiceUrl string = 'https://${appService.properties.defaultHostName}'
 output appServiceName string = appService.name
-output sqlServerName string = sqlServer.name
-output databaseName string = sqlDatabase.name
+output postgresServerName string = postgresServer.name
+output postgresServerFqdn string = postgresServer.properties.fullyQualifiedDomainName
+output sqlServerName string = postgresServer.name
+output databaseName string = postgresDatabase.name
 output storageAccountName string = storageAccount.name
 output serviceBusNamespace string = sbNamespace.name
 output keyVaultName string = keyVault.name

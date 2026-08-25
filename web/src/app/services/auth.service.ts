@@ -1,7 +1,7 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
-import { CurrentUser, LoginRequest, LoginResult } from '../models/user.model';
+import { CurrentUser, LoginRequest, LoginResult, RefreshTokenRequest } from '../models/user.model';
 import { Tenant } from '../models/tenant.model';
 
 const AUTH_KEY = 'pf-auth';
@@ -39,6 +39,18 @@ export class AuthService {
     );
   }
 
+  refresh(): Observable<LoginResult> {
+    const current = this.authState();
+    const token = current?.refreshToken;
+    if (!token) {
+      throw new Error('No refresh token available');
+    }
+    const body: RefreshTokenRequest = { refreshToken: token };
+    return this.http.post<LoginResult>(`${this.baseUrl}/refresh`, body).pipe(
+      tap((result) => this.setSession(result))
+    );
+  }
+
   loadCurrentUser(): Observable<CurrentUser> {
     return this.http.get<CurrentUser>(`${this.baseUrl}/me`).pipe(
       tap((user) => {
@@ -59,6 +71,16 @@ export class AuthService {
   }
 
   logout(): void {
+    const refreshToken = this.authState()?.refreshToken;
+    if (refreshToken) {
+      this.http.post(`${this.baseUrl}/logout`, { refreshToken }).subscribe({
+        error: () => {}
+      });
+    }
+    this.clearSession();
+  }
+
+  clearSession(): void {
     this.authState.set(null);
     this.user.set(null);
     this.activeTenantId.set(null);
@@ -68,6 +90,10 @@ export class AuthService {
     } catch {
       // ignore storage errors
     }
+  }
+
+  hasRefreshToken(): boolean {
+    return !!this.authState()?.refreshToken;
   }
 
   private setSession(result: LoginResult): void {

@@ -6,8 +6,7 @@ namespace PostForge.Worker.Services;
 
 public sealed class PublishJobService(
     ILogger<PublishJobService> logger,
-    IMediator mediator,
-    IPublishJobSender publishJobSender) : BackgroundService
+    IServiceScopeFactory scopeFactory) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -17,6 +16,10 @@ public sealed class PublishJobService(
         {
             try
             {
+                using var scope = scopeFactory.CreateScope();
+                var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+                var publishJobSender = scope.ServiceProvider.GetRequiredService<IPublishJobSender>();
+
                 var pendingSlots = await mediator.Send(new GetPendingSlotsQuery(), stoppingToken);
 
                 foreach (var slot in pendingSlots)

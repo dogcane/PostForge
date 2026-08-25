@@ -3,20 +3,11 @@ using Quartz;
 
 namespace PostForge.Worker.Services;
 
-internal sealed class QuartzHostedService : IHostedService
+internal sealed class QuartzHostedService(IScheduler scheduler, ILogger<QuartzHostedService> logger) : IHostedService
 {
-    private readonly IScheduler _scheduler;
-    private readonly ILogger<QuartzHostedService> _logger;
-
-    public QuartzHostedService(IScheduler scheduler, ILogger<QuartzHostedService> logger)
-    {
-        _scheduler = scheduler;
-        _logger = logger;
-    }
-
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Starting Quartz scheduler");
+        logger.LogInformation("Starting Quartz scheduler");
 
         var job = JobBuilder.Create<PublishPostJob>()
             .WithIdentity("PublishPostJob", "default")
@@ -30,19 +21,19 @@ internal sealed class QuartzHostedService : IHostedService
                 .RepeatForever())
             .Build();
 
-        await _scheduler.ScheduleJob(job, trigger, cancellationToken);
-        await _scheduler.Start(cancellationToken);
+        await scheduler.ScheduleJob(job, trigger, cancellationToken);
+        await scheduler.Start(cancellationToken);
 
-        _logger.LogInformation("Quartz scheduler started. PublishPostJob will run every minute.");
+        logger.LogInformation("Quartz scheduler started. PublishPostJob will run every minute.");
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Shutting down Quartz scheduler");
+        logger.LogInformation("Shutting down Quartz scheduler");
 
-        if (_scheduler.IsStarted)
+        if (scheduler.IsStarted)
         {
-            await _scheduler.Shutdown(cancellationToken);
+            await scheduler.Shutdown(cancellationToken);
         }
     }
 }

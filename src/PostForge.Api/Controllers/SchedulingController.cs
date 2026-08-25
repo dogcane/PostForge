@@ -14,26 +14,20 @@ namespace PostForge.Api.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/v1/scheduling")]
-public class SchedulingController : ControllerBase
+public class SchedulingController(IMediator mediator) : ControllerBase
 {
-    private readonly IMediator _mediator;
-
-    public SchedulingController(IMediator mediator)
-    {
-        _mediator = mediator;
-    }
 
     [HttpPost("schedule")]
     public async Task<ActionResult<Guid>> Schedule([FromBody] SchedulePostCommand command)
     {
-        var slotId = await _mediator.Send(command);
+        var slotId = await mediator.Send(command);
         return CreatedAtAction(null, null, new { slotId }, slotId);
     }
 
     [HttpPost("{slotId:guid}/publish")]
     public async Task<ActionResult> MarkPublished(Guid slotId)
     {
-        await _mediator.Send(new MarkSlotPublishedCommand(slotId));
+        await mediator.Send(new MarkSlotPublishedCommand(slotId));
         return NoContent();
     }
 
@@ -43,14 +37,14 @@ public class SchedulingController : ControllerBase
         if (slotId != command.SlotId)
             return BadRequest("Id mismatch between route and body.");
 
-        await _mediator.Send(command);
+        await mediator.Send(command);
         return NoContent();
     }
 
     [HttpGet("pending")]
     public async Task<ActionResult<List<ScheduleSlotDto>>> GetPending()
     {
-        var slots = await _mediator.Send(new GetPendingSlotsQuery());
+        var slots = await mediator.Send(new GetPendingSlotsQuery());
         return Ok(slots);
     }
 
@@ -62,7 +56,7 @@ public class SchedulingController : ControllerBase
         if (start >= end)
             return BadRequest("Start must be before end.");
 
-        var slots = await _mediator.Send(new GetCalendarSlotsQuery(
+        var slots = await mediator.Send(new GetCalendarSlotsQuery(
             DateTime.SpecifyKind(start, DateTimeKind.Utc),
             DateTime.SpecifyKind(end, DateTimeKind.Utc)));
         return Ok(slots);
@@ -71,7 +65,7 @@ public class SchedulingController : ControllerBase
     [HttpGet("by-post/{postId:guid}")]
     public async Task<ActionResult<List<ScheduleSlotDto>>> GetByPostId(Guid postId)
     {
-        var slots = await _mediator.Send(new GetSlotsByPostIdQuery(postId));
+        var slots = await mediator.Send(new GetSlotsByPostIdQuery(postId));
         return Ok(slots);
     }
 }

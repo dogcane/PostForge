@@ -2,14 +2,9 @@ using PostForge.Domain.Providers;
 
 namespace PostForge.Infrastructure.Providers.Social;
 
-public class SocialPlatformProviderRegistry : ISocialPlatformProviderRegistry
+public class SocialPlatformProviderRegistry(IEnumerable<ISocialPlatformProvider> providers) : ISocialPlatformProviderRegistry
 {
-    private readonly Dictionary<string, ISocialPlatformProvider> _providers;
-
-    public SocialPlatformProviderRegistry(IEnumerable<ISocialPlatformProvider> providers)
-    {
-        _providers = providers.ToDictionary(p => p.Identifier, StringComparer.OrdinalIgnoreCase);
-    }
+    private readonly Dictionary<string, ISocialPlatformProvider> _providers = providers.ToDictionary(p => p.Identifier, StringComparer.OrdinalIgnoreCase);
 
     public IReadOnlyCollection<string> AvailableProviderKeys => _providers.Keys;
 

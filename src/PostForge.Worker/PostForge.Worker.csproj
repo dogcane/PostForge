@@ -20,6 +20,7 @@
   <ItemGroup>
     <ProjectReference Include="..\PostForge.Application\PostForge.Application.csproj" />
     <ProjectReference Include="..\PostForge.Infrastructure.DAL\PostForge.Infrastructure.DAL.csproj" />
+    <ProjectReference Include="..\PostForge.Infrastructure.Identity\PostForge.Infrastructure.Identity.csproj" />
     <ProjectReference Include="..\PostForge.Infrastructure.Messaging.ServiceBus\PostForge.Infrastructure.Messaging.ServiceBus.csproj" />
     <ProjectReference Include="..\PostForge.Infrastructure\PostForge.Infrastructure.csproj" />
     <ProjectReference Include="..\PostForge.Infrastructure.Providers\PostForge.Infrastructure.Providers.csproj" />

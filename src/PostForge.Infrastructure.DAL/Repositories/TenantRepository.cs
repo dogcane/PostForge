@@ -5,7 +5,4 @@ using PostForge.Domain.Interfaces;
 
 namespace PostForge.Infrastructure.DAL.Repositories;
 
-public class TenantRepository : EntityFrameworkRepository<Tenant, Guid>, ITenantRepository
-{
-    public TenantRepository(IDataContext dataContext) : base(dataContext) { }
-}
+public class TenantRepository(IDataContext dataContext) : EntityFrameworkRepository<Tenant, Guid>(dataContext), ITenantRepository;

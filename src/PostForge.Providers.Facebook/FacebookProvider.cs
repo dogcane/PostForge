@@ -8,7 +8,7 @@ using PostForge.Providers.Facebook.Models;
 
 namespace PostForge.Providers.Facebook;
 
-public class FacebookProvider : ISocialPlatformProvider
+public class FacebookProvider(HttpClient httpClient, IOptions<FacebookProviderOptions> options) : ISocialPlatformProvider
 {
     private static readonly SocialPlatformCapabilities Supported =
         SocialPlatformCapabilities.TextOnly
@@ -52,14 +52,8 @@ public class FacebookProvider : ISocialPlatformProvider
         ".mp4", ".mov", ".avi", ".wmv", ".mpg", ".mpeg", ".webm", ".flv", ".m4v", ".mkv", ".3gp", ".3g2", ".ogv"
     };
 
-    private readonly FacebookGraphApiClient _client;
-    private readonly FacebookProviderOptions _options;
-
-    public FacebookProvider(HttpClient httpClient, IOptions<FacebookProviderOptions> options)
-    {
-        _options = options.Value;
-        _client = new FacebookGraphApiClient(httpClient, _options);
-    }
+    private readonly FacebookProviderOptions _options = options.Value;
+    private readonly FacebookGraphApiClient _client = new(httpClient, options.Value);
 
     public string Name => "Facebook";
     public string Identifier => "FACEBOOK";

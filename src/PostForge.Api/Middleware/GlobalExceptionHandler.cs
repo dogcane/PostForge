@@ -3,15 +3,8 @@ using PostForge.Application.Common.Exceptions;
 
 namespace PostForge.Api.Middleware;
 
-public class GlobalExceptionHandler : IMiddleware
+public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IMiddleware
 {
-    private readonly ILogger<GlobalExceptionHandler> _logger;
-
-    public GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger)
-    {
-        _logger = logger;
-    }
-
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
         try
@@ -20,7 +13,7 @@ public class GlobalExceptionHandler : IMiddleware
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "An unhandled exception occurred: {Message}", ex.Message);
+            logger.LogError(ex, "An unhandled exception occurred: {Message}", ex.Message);
             await HandleExceptionAsync(context, ex);
         }
     }

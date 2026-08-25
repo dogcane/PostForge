@@ -19,6 +19,7 @@ import { createDemoData, DemoData, DemoUser } from './demo-data';
 
 const DEMO_LATENCY_MS = 250;
 const TOKEN_PREFIX = 'demo-token-';
+const REFRESH_PREFIX = 'demo-refresh-';
 
 export const demoInterceptor: HttpInterceptorFn = (req, next) => {
   if (!environment.demoMode || !req.url.startsWith('/api/')) {
@@ -59,11 +60,40 @@ export class DemoBackend {
       const result: LoginResult = {
         token: TOKEN_PREFIX + user.userId,
         expiresAtUtc: new Date(Date.now() + 8 * 3600_000).toISOString(),
+        refreshToken: REFRESH_PREFIX + user.userId + '-' + Date.now(),
+        refreshExpiresAtUtc: new Date(Date.now() + 7 * 24 * 3600_000).toISOString(),
         userId: user.userId,
         email: user.email,
         isSuperUser: user.isSuperUser
       };
       return ok(result);
+    }
+
+    if (method === 'POST' && path === '/api/v1/auth/refresh') {
+      const raw = String(body()['refreshToken'] ?? '');
+      if (!raw.startsWith(REFRESH_PREFIX)) {
+        throw unauthorized('Invalid refresh token.');
+      }
+      const parts = raw.slice(REFRESH_PREFIX.length).split('-');
+      const userId = parts[0];
+      const user = this.data.users.find((u) => u.userId === userId);
+      if (!user) {
+        throw unauthorized('Invalid refresh token.');
+      }
+      const result: LoginResult = {
+        token: TOKEN_PREFIX + user.userId + '-' + Date.now(),
+        expiresAtUtc: new Date(Date.now() + 8 * 3600_000).toISOString(),
+        refreshToken: REFRESH_PREFIX + user.userId + '-' + Date.now(),
+        refreshExpiresAtUtc: new Date(Date.now() + 7 * 24 * 3600_000).toISOString(),
+        userId: user.userId,
+        email: user.email,
+        isSuperUser: user.isSuperUser
+      };
+      return ok(result);
+    }
+
+    if (method === 'POST' && path === '/api/v1/auth/logout') {
+      return ok(null);
     }
 
     if (method === 'GET' && path === '/api/v1/auth/me') {
@@ -337,8 +367,11 @@ export class DemoBackend {
 
   private userFromToken(req: HttpRequest<unknown>): DemoUser {
     const token = req.headers.get('Authorization')?.replace(/^Bearer\s+/i, '') ?? '';
-    const userId = token.startsWith(TOKEN_PREFIX) ? token.slice(TOKEN_PREFIX.length) : null;
-    const user = this.data.users.find((u) => u.userId === userId);
+    if (!token.startsWith(TOKEN_PREFIX)) {
+      throw unauthorized('Session expired.');
+    }
+    const rest = token.slice(TOKEN_PREFIX.length);
+    const user = this.data.users.find((u) => rest === u.userId || rest.startsWith(u.userId + '-'));
     if (!user) {
       throw unauthorized('Session expired.');
     }
