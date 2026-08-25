@@ -7,10 +7,13 @@ namespace PostForge.Domain.Entities;
 
 public class Post : AggregateRoot<Guid>
 {
+    #region Fields
     private readonly List<MediaAsset> _mediaAssetsField = [];
     private readonly List<string> _targetPlatformsField = [];
     private readonly List<PostTag> _tags = [];
+    #endregion
 
+    #region Properties
     public Guid Id => Identity;
     public Guid TenantId { get; private set; }
     public string Text { get; private set; }
@@ -21,7 +24,9 @@ public class Post : AggregateRoot<Guid>
     public PostStatus Status { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
     public DateTime UpdatedAtUtc { get; private set; }
+    #endregion
 
+    #region ctor
     private Post() : base(Guid.NewGuid())
     {
         Text = null!;
@@ -36,106 +41,115 @@ public class Post : AggregateRoot<Guid>
         CreatedAtUtc = DateTime.UtcNow;
         UpdatedAtUtc = DateTime.UtcNow;
     }
+    #endregion
 
-    public static OperationResult<Post> Create(string text, Guid tenantId, Guid? campaignId = null)
+    #region Methods
+    protected static OperationResult Validate(string text, Guid tenantId)
     {
         var result = OperationResult.MakeSuccess();
         result
             .With(text, "Text").Required().StringLength(5000)
             .With(tenantId, "TenantId").Condition(v => v != Guid.Empty);
-        if (!result.Success)
-            return result;
-        return OperationResult<Post>.MakeSuccess(new Post(text, tenantId, campaignId));
+        return result;
     }
+
+    public static OperationResult<Post> Create(string text, Guid tenantId, Guid? campaignId = null)
+        => Validate(text, tenantId)
+            .IfSuccessThenReturn<Post>(() => new Post(text, tenantId, campaignId));
 
     public OperationResult UpdateText(string text)
-    {
-        var result = OperationResult.MakeSuccess();
-        result.With(text, "Text").Required().StringLength(5000);
-        if (!result.Success)
-            return result;
-        Text = text;
-        UpdatedAtUtc = DateTime.UtcNow;
-        return OperationResult.MakeSuccess();
-    }
+        => OperationResult.MakeSuccess()
+            .With(text, "Text").Required().StringLength(5000)
+            .Result
+            .IfSuccess(_ =>
+            {
+                Text = text;
+                UpdatedAtUtc = DateTime.UtcNow;
+            });
 
     public OperationResult AddMedia(MediaAsset media)
-    {
-        var result = OperationResult.MakeSuccess();
-        result.With(media, "Media").Required();
-        if (!result.Success)
-            return result;
-        _mediaAssetsField.Add(media);
-        UpdatedAtUtc = DateTime.UtcNow;
-        return OperationResult.MakeSuccess();
-    }
+        => OperationResult.MakeSuccess()
+            .With(media, "Media").Required()
+            .Result
+            .IfSuccess(_ =>
+            {
+                _mediaAssetsField.Add(media);
+                UpdatedAtUtc = DateTime.UtcNow;
+            });
 
     public OperationResult RemoveMedia(MediaAsset media)
     {
-        var result = OperationResult.MakeSuccess();
-        result.With(media, "Media").Required();
-        if (!result.Success)
-            return result;
-        if (!_mediaAssetsField.Remove(media))
+        var validation = OperationResult.MakeSuccess()
+            .With(media, "Media").Required()
+            .Result;
+        if (!validation.Success)
+            return validation;
+        if (!_mediaAssetsField.Contains(media))
             return OperationResult.MakeFailure(ErrorMessage.Create("Media", "Media not found in the post."));
-        UpdatedAtUtc = DateTime.UtcNow;
-        return OperationResult.MakeSuccess();
+        return OperationResult.MakeSuccess().IfSuccess(_ =>
+        {
+            _mediaAssetsField.Remove(media);
+            UpdatedAtUtc = DateTime.UtcNow;
+        });
     }
 
     public OperationResult SetStatus(PostStatus newStatus)
-    {
-        var result = OperationResult.MakeSuccess();
-        result.With(newStatus, "Status").Condition(v => Enum.IsDefined(typeof(PostStatus), v));
-        if (!result.Success)
-            return result;
-        var oldStatus = Status;
-        Status = newStatus;
-        UpdatedAtUtc = DateTime.UtcNow;
-        return OperationResult.MakeSuccess();
-    }
+        => OperationResult.MakeSuccess()
+            .With(newStatus, "Status").Condition(v => Enum.IsDefined(v))
+            .Result
+            .IfSuccess(_ =>
+            {
+                Status = newStatus;
+                UpdatedAtUtc = DateTime.UtcNow;
+            });
 
     public OperationResult ScheduleForPlatform(string platformIdentifier)
-    {
-        var result = OperationResult.MakeSuccess();
-        result.With(platformIdentifier, "Platform").Required().StringLength(50);
-        if (!result.Success)
-            return result;
-        if (!_targetPlatformsField.Contains(platformIdentifier))
-        {
-            _targetPlatformsField.Add(platformIdentifier);
-            UpdatedAtUtc = DateTime.UtcNow;
-        }
-        return OperationResult.MakeSuccess();
-    }
+        => OperationResult.MakeSuccess()
+            .With(platformIdentifier, "Platform").Required().StringLength(50)
+            .Result
+            .IfSuccess(_ =>
+            {
+                if (!_targetPlatformsField.Contains(platformIdentifier))
+                {
+                    _targetPlatformsField.Add(platformIdentifier);
+                    UpdatedAtUtc = DateTime.UtcNow;
+                }
+            });
 
     public OperationResult AddTag(PostTag tag)
     {
-        var result = OperationResult.MakeSuccess();
-        result.With(tag, "Tag").Required();
-        if (!result.Success)
-            return result;
+        var validation = OperationResult.MakeSuccess()
+            .With(tag, "Tag").Required()
+            .Result;
+        if (!validation.Success)
+            return validation;
         if (!_targetPlatformsField.Contains(tag.Platform))
             return OperationResult.MakeFailure(
                 ErrorMessage.Create("Platform", $"Cannot tag a user on platform '{tag.Platform}': the post is not targeted at it."));
         if (_tags.Contains(tag))
             return OperationResult.MakeFailure(
                 ErrorMessage.Create("Tag", $"Tag '{tag.Username}' of type {tag.TagType} already exists for platform '{tag.Platform}'."));
-        _tags.Add(tag);
-        UpdatedAtUtc = DateTime.UtcNow;
-        return OperationResult.MakeSuccess();
+        return OperationResult.MakeSuccess().IfSuccess(_ =>
+        {
+            _tags.Add(tag);
+            UpdatedAtUtc = DateTime.UtcNow;
+        });
     }
 
     public OperationResult SetTags(IReadOnlyList<PostTag> tags)
     {
-        var result = OperationResult.MakeSuccess();
-        result.With(tags, "Tags").Required();
-        if (!result.Success)
-            return result;
+        var validation = OperationResult.MakeSuccess()
+            .With(tags, "Tags").Required()
+            .Result;
+        if (!validation.Success)
+            return validation;
         foreach (var tag in tags)
         {
-            result.With(tag, "Tag").Required();
-            if (!result.Success)
-                return result;
+            validation = OperationResult.MakeSuccess()
+                .With(tag, "Tag").Required()
+                .Result;
+            if (!validation.Success)
+                return validation;
             if (!_targetPlatformsField.Contains(tag.Platform))
                 return OperationResult.MakeFailure(
                     ErrorMessage.Create("Platform", $"Cannot tag a user on platform '{tag.Platform}': the post is not targeted at it."));
@@ -143,21 +157,28 @@ public class Post : AggregateRoot<Guid>
                 return OperationResult.MakeFailure(
                     ErrorMessage.Create("Tag", $"Duplicate tag '{tag.Username}' of type {tag.TagType} for platform '{tag.Platform}'."));
         }
-        _tags.Clear();
-        _tags.AddRange(tags);
-        UpdatedAtUtc = DateTime.UtcNow;
-        return OperationResult.MakeSuccess();
+        return OperationResult.MakeSuccess().IfSuccess(_ =>
+        {
+            _tags.Clear();
+            _tags.AddRange(tags);
+            UpdatedAtUtc = DateTime.UtcNow;
+        });
     }
 
     public OperationResult RemoveTag(PostTag tag)
     {
-        var result = OperationResult.MakeSuccess();
-        result.With(tag, "Tag").Required();
-        if (!result.Success)
-            return result;
-        if (!_tags.Remove(tag))
+        var validation = OperationResult.MakeSuccess()
+            .With(tag, "Tag").Required()
+            .Result;
+        if (!validation.Success)
+            return validation;
+        if (!_tags.Contains(tag))
             return OperationResult.MakeFailure(ErrorMessage.Create("Tag", "Tag not found in the post."));
-        UpdatedAtUtc = DateTime.UtcNow;
-        return OperationResult.MakeSuccess();
+        return OperationResult.MakeSuccess().IfSuccess(_ =>
+        {
+            _tags.Remove(tag);
+            UpdatedAtUtc = DateTime.UtcNow;
+        });
     }
+    #endregion
 }

@@ -7,6 +7,10 @@ namespace PostForge.Domain.Entities;
 
 public class ProviderCredential : AggregateRoot<Guid>
 {
+    #region Fields
+    #endregion
+
+    #region Properties
     public Guid Id => Identity;
     public Guid TenantId { get; private set; }
     public string ProviderKey { get; private set; }
@@ -14,7 +18,9 @@ public class ProviderCredential : AggregateRoot<Guid>
     public string KeyVaultReference { get; private set; }
     public bool IsValidated { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
+    #endregion
 
+    #region ctor
     private ProviderCredential() : base(Guid.NewGuid())
     {
         ProviderKey = null!;
@@ -30,25 +36,27 @@ public class ProviderCredential : AggregateRoot<Guid>
         IsValidated = false;
         CreatedAtUtc = DateTime.UtcNow;
     }
+    #endregion
 
-    public static OperationResult<ProviderCredential> Create(Guid tenantId, string providerKey, ProviderCredentialScope scope, string keyVaultReference)
+    #region Methods
+    protected static OperationResult Validate(Guid tenantId, string providerKey, ProviderCredentialScope scope, string keyVaultReference)
     {
         var result = OperationResult.MakeSuccess();
         result
             .With(tenantId, "TenantId").Condition(v => v != Guid.Empty)
             .With(providerKey, "ProviderKey").Required().StringLength(100)
-            .With(scope, "Scope").Condition(v => Enum.IsDefined(typeof(ProviderCredentialScope), v))
+            .With(scope, "Scope").Condition(v => Enum.IsDefined(v))
             .With(keyVaultReference, "KeyVaultReference").Required().StringLength(500);
-        if (!result.Success)
-            return result;
-        return OperationResult<ProviderCredential>.MakeSuccess(new ProviderCredential(tenantId, providerKey, scope, keyVaultReference));
+        return result;
     }
 
+    public static OperationResult<ProviderCredential> Create(Guid tenantId, string providerKey, ProviderCredentialScope scope, string keyVaultReference)
+        => Validate(tenantId, providerKey, scope, keyVaultReference)
+            .IfSuccessThenReturn<ProviderCredential>(() => new ProviderCredential(tenantId, providerKey, scope, keyVaultReference));
+
     public OperationResult MarkAsValidated()
-    {
-        if (IsValidated)
-            return OperationResult.MakeFailure(ErrorMessage.Create("IsValidated", "Credential is already validated."));
-        IsValidated = true;
-        return OperationResult.MakeSuccess();
-    }
+        => IsValidated
+            ? OperationResult.MakeFailure(ErrorMessage.Create("IsValidated", "Credential is already validated."))
+            : OperationResult.MakeSuccess().IfSuccess(_ => IsValidated = true);
+    #endregion
 }

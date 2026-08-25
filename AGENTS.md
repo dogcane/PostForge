@@ -109,6 +109,19 @@ public sealed class FacebookProvider(HttpClient httpClient, IOptions<FacebookPro
 - **ImplicitUsings + Nullable** abilitati in ogni csproj.
 - **Eccezione DDD**: le Entity di dominio restano con costruttori `private` + factory `Create()` che restituisce `OperationResult<T>` (vedi sotto) — primary constructor NON si applica alle entity, perché la costruzione passa dalla validazione Resulz. Si applica a tutto il resto.
 
+## Stile entità e ValueObject (allineato a `Campaign.cs`)
+
+Tutte le entità (`Entities/`) e i ValueObject con validazione usano lo stesso stile di `src/PostForge.Domain/Entities/Campaign.cs:1`:
+
+- **Regions obbligatori**: `#region Fields`, `#region Properties`, `#region ctor`, `#region Methods` in quest'ordine. Anche se una region è vuota va lasciata (es. `Tenant.cs:10`).
+- **Metodi che restituiscono `OperationResult` in modo fluent/expressive**:
+  - Estrarre `protected static OperationResult Validate(...)` che accumula le regole con `Resulz.Validation` (`Campaign.cs:45`).
+  - `Create` come expression body: `=> Validate(...).IfSuccessThenReturn<TEntity>(() => new Entity(...))` (`Campaign.cs:58`).
+  - Mutazioni semplici: `=> Validate(...).IfSuccess(_ => { /* assign */ })` (`Campaign.cs:63`).
+  - Validazioni inline: `=> OperationResult.MakeSuccess().With(value, "Ctx").Required()... .Result.IfSuccess(_ => { /* mutate */ })` (`Campaign.cs:67`). Usare `.Result` per ottenere `OperationResult` da `ValueChecker<T>` prima di `IfSuccess`.
+  - Guard con errore custom + expression body: `=> condition ? MakeFailure(...) : MakeSuccess().IfSuccess(...)` (es. `Tenant.cs:42`, `ScheduleSlot.cs:52`).
+- **Expression bodies quando possibile**: preferire `=>` per `Create`, `Validate` quando breve, mutazioni a singola espressione e property `Id => Identity`, `CanRetry => ...`. Mantenere block body solo quando il flusso richiede `foreach`/`if` multipli non esprimibili fluentmente (es. `Post.cs:128`).
+
 ## Domain Events
 
 I domain events NON vivono nel layer Domain: le entità non espongono storage di eventi. Gli eventi saranno modellati a livello **Application** (da definire, ad es. tramite `Mediator`).

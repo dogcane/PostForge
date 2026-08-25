@@ -2,6 +2,7 @@ namespace PostForge.Domain.ValueObjects;
 
 public abstract class ValueObject : IEquatable<ValueObject>
 {
+    #region Methods
     protected abstract IEnumerable<object> GetEqualityComponents();
 
     public override bool Equals(object? obj) =>
@@ -18,4 +19,5 @@ public abstract class ValueObject : IEquatable<ValueObject>
     public static bool operator ==(ValueObject? left, ValueObject? right) => Equals(left, right);
 
     public static bool operator !=(ValueObject? left, ValueObject? right) => !Equals(left, right);
+    #endregion
 }

@@ -6,11 +6,17 @@ namespace PostForge.Domain.Entities;
 
 public class TenantMembership : AggregateRoot<Guid>
 {
+    #region Fields
+    #endregion
+
+    #region Properties
     public Guid Id => Identity;
     public Guid TenantId { get; private set; }
     public Guid UserId { get; private set; }
     public DateTime JoinedAtUtc { get; private set; }
+    #endregion
 
+    #region ctor
     private TenantMembership() : base(Guid.NewGuid())
     {
     }
@@ -21,15 +27,20 @@ public class TenantMembership : AggregateRoot<Guid>
         UserId = userId;
         JoinedAtUtc = DateTime.UtcNow;
     }
+    #endregion
 
-    public static OperationResult<TenantMembership> Create(Guid tenantId, Guid userId)
+    #region Methods
+    protected static OperationResult Validate(Guid tenantId, Guid userId)
     {
         var result = OperationResult.MakeSuccess();
         result
             .With(tenantId, "TenantId").Condition(v => v != Guid.Empty)
             .With(userId, "UserId").Condition(v => v != Guid.Empty);
-        if (!result.Success)
-            return result;
-        return OperationResult<TenantMembership>.MakeSuccess(new TenantMembership(tenantId, userId));
+        return result;
     }
+
+    public static OperationResult<TenantMembership> Create(Guid tenantId, Guid userId)
+        => Validate(tenantId, userId)
+            .IfSuccessThenReturn<TenantMembership>(() => new TenantMembership(tenantId, userId));
+    #endregion
 }

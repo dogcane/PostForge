@@ -7,8 +7,11 @@ namespace PostForge.Domain.Entities;
 
 public class Campaign : AggregateRoot<Guid>
 {
+    #region Fields
     private readonly List<Guid> _postIdsField = [];
+    #endregion
 
+    #region Properties
     public Guid Id => Identity;
     public Guid TenantId { get; private set; }
     public string Name { get; private set; }
@@ -18,13 +21,12 @@ public class Campaign : AggregateRoot<Guid>
     public DateTime? EndDateUtc { get; private set; }
     public IReadOnlyList<Guid> PostIds => _postIdsField.AsReadOnly();
     public DateTime CreatedAtUtc { get; private set; }
+    #endregion
 
-    private Campaign() : base(Guid.NewGuid())
-    {
-        Name = null!;
-    }
+    #region ctor
+    private Campaign() : base(Guid.NewGuid()) => Name = null!;
 
-    private Campaign(Guid tenantId, string name, CampaignGoal goal, CampaignChannel channel, DateTime startDateUtc, DateTime? endDateUtc) : base(Guid.NewGuid())
+    protected Campaign(Guid tenantId, string name, CampaignGoal goal, CampaignChannel channel, DateTime startDateUtc, DateTime? endDateUtc) : base(Guid.NewGuid())
     {
         TenantId = tenantId;
         Name = name;
@@ -34,60 +36,44 @@ public class Campaign : AggregateRoot<Guid>
         EndDateUtc = endDateUtc;
         CreatedAtUtc = DateTime.UtcNow;
     }
+    #endregion
 
-    public static OperationResult<Campaign> Create(Guid tenantId, string name, CampaignGoal goal, CampaignChannel channel, DateTime startDateUtc, DateTime? endDateUtc = null)
+    #region Methods
+    protected static OperationResult Validate(Guid tenantId, string name, CampaignGoal goal, CampaignChannel channel, DateTime startDateUtc, DateTime? endDateUtc = null)
     {
         var result = OperationResult.MakeSuccess();
         result
             .With(tenantId, "TenantId").Condition(v => v != Guid.Empty)
             .With(name, "Name").Required().StringLength(200)
-            .With(goal, "Goal").Condition(v => Enum.IsDefined(typeof(CampaignGoal), v))
-            .With(channel, "Channel").Condition(v => Enum.IsDefined(typeof(CampaignChannel), v));
+            .With(goal, "Goal").Condition(v => Enum.IsDefined(v))
+            .With(channel, "Channel").Condition(v => Enum.IsDefined(v));
         if (result.Success && endDateUtc.HasValue)
             result.With(endDateUtc.Value, "EndDate").Condition(v => v > startDateUtc);
-        if (!result.Success)
-            return result;
-        return OperationResult<Campaign>.MakeSuccess(new Campaign(tenantId, name, goal, channel, startDateUtc, endDateUtc));
+        return result;
     }
+
+    public static OperationResult<Campaign> Create(Guid tenantId, string name, CampaignGoal goal, CampaignChannel channel, DateTime startDateUtc, DateTime? endDateUtc = null) 
+        => Validate(tenantId, name, goal, channel, startDateUtc, endDateUtc)
+            .IfSuccessThenReturn<Campaign>(() => new Campaign(tenantId, name, goal, channel, startDateUtc, endDateUtc));
+
 
     public OperationResult UpdateDetails(string name, CampaignGoal goal, CampaignChannel channel, DateTime startDateUtc, DateTime? endDateUtc)
-    {
-        var result = OperationResult.MakeSuccess();
-        result
-            .With(name, "Name").Required().StringLength(200)
-            .With(goal, "Goal").Condition(v => Enum.IsDefined(typeof(CampaignGoal), v))
-            .With(channel, "Channel").Condition(v => Enum.IsDefined(typeof(CampaignChannel), v));
-        if (result.Success && endDateUtc.HasValue)
-            result.With(endDateUtc.Value, "EndDate").Condition(v => v > startDateUtc);
-        if (!result.Success)
-            return result;
-        Name = name;
-        Goal = goal;
-        Channel = channel;
-        StartDateUtc = startDateUtc;
-        EndDateUtc = endDateUtc;
-        return OperationResult.MakeSuccess();
-    }
+        => Validate(this.TenantId, name, goal, channel, startDateUtc, endDateUtc)
+            .IfSuccess(result => { Name = name; Goal = goal; Channel = channel; StartDateUtc = startDateUtc; EndDateUtc = endDateUtc; });
 
-    public OperationResult AddPost(Guid postId)
-    {
-        var result = OperationResult.MakeSuccess();
-        result.With(postId, "PostId").Condition(v => v != Guid.Empty);
-        if (!result.Success)
-            return result;
-        if (!_postIdsField.Contains(postId))
-            _postIdsField.Add(postId);
-        return OperationResult.MakeSuccess();
-    }
+    public OperationResult AddPost(Guid postId) 
+        => OperationResult.MakeSuccess()
+            .With(postId, "PostId").Condition(v => v != Guid.Empty)
+            .With(postId, "PostId").Condition(v => !_postIdsField.Contains(v))
+            .Result
+            .IfSuccess(result => _postIdsField.Add(postId));
 
     public OperationResult RemovePost(Guid postId)
-    {
-        var result = OperationResult.MakeSuccess();
-        result.With(postId, "PostId").Condition(v => v != Guid.Empty);
-        if (!result.Success)
-            return result;
-        if (!_postIdsField.Remove(postId))
-            return OperationResult.MakeFailure(ErrorMessage.Create("PostId", "Post ID not found in campaign."));
-        return OperationResult.MakeSuccess();
-    }
+        => OperationResult.MakeSuccess()
+            .With(postId, "PostId").Condition(v => v != Guid.Empty)
+            .With(postId, "PostId").Condition(v => _postIdsField.Contains(v))
+            .Result
+            .IfSuccess(result => _postIdsField.Remove(postId));
+
+    #endregion
 }

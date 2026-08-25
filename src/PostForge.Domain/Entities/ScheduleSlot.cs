@@ -7,6 +7,10 @@ namespace PostForge.Domain.Entities;
 
 public class ScheduleSlot : AggregateRoot<Guid>
 {
+    #region Fields
+    #endregion
+
+    #region Properties
     public Guid Id => Identity;
     public Guid TenantId { get; private set; }
     public Guid PostId { get; private set; }
@@ -16,7 +20,10 @@ public class ScheduleSlot : AggregateRoot<Guid>
     public int RetryCount { get; private set; }
     public string? LastError { get; private set; }
     public DateTime? PublishedAtUtc { get; private set; }
+    public bool CanRetry => RetryCount < 3;
+    #endregion
 
+    #region ctor
     private ScheduleSlot() : base(Guid.NewGuid())
     {
         Platform = null!;
@@ -31,8 +38,10 @@ public class ScheduleSlot : AggregateRoot<Guid>
         Status = PostStatus.Scheduled;
         RetryCount = 0;
     }
+    #endregion
 
-    public static OperationResult<ScheduleSlot> Create(Guid tenantId, Guid postId, string platform, DateTime scheduledAtUtc)
+    #region Methods
+    protected static OperationResult Validate(Guid tenantId, Guid postId, string platform, DateTime scheduledAtUtc)
     {
         var result = OperationResult.MakeSuccess();
         result
@@ -41,29 +50,30 @@ public class ScheduleSlot : AggregateRoot<Guid>
             .With(platform, "Platform").Required().StringLength(50)
             .With(scheduledAtUtc, "ScheduledAt").Condition(v => v != default)
             .With(scheduledAtUtc, "ScheduledAt").Condition(v => v.Kind == DateTimeKind.Utc);
-        if (!result.Success)
-            return result;
-        return OperationResult<ScheduleSlot>.MakeSuccess(new ScheduleSlot(tenantId, postId, platform, scheduledAtUtc));
+        return result;
     }
+
+    public static OperationResult<ScheduleSlot> Create(Guid tenantId, Guid postId, string platform, DateTime scheduledAtUtc)
+        => Validate(tenantId, postId, platform, scheduledAtUtc)
+            .IfSuccessThenReturn<ScheduleSlot>(() => new ScheduleSlot(tenantId, postId, platform, scheduledAtUtc));
 
     public OperationResult MarkPublished()
-    {
-        if (Status != PostStatus.Scheduled && Status != PostStatus.Publishing)
-            return OperationResult.MakeFailure(ErrorMessage.Create("Status", $"Cannot publish a slot with status {Status}."));
-        Status = PostStatus.Published;
-        PublishedAtUtc = DateTime.UtcNow;
-        return OperationResult.MakeSuccess();
-    }
+        => Status is not PostStatus.Scheduled and not PostStatus.Publishing
+            ? OperationResult.MakeFailure(ErrorMessage.Create("Status", $"Cannot publish a slot with status {Status}."))
+            : OperationResult.MakeSuccess().IfSuccess(_ =>
+            {
+                Status = PostStatus.Published;
+                PublishedAtUtc = DateTime.UtcNow;
+            });
 
     public OperationResult MarkFailed(string? error = null)
-    {
-        if (Status != PostStatus.Publishing && Status != PostStatus.Scheduled && Status != PostStatus.Failed)
-            return OperationResult.MakeFailure(ErrorMessage.Create("Status", $"Cannot mark as failed a slot with status {Status}."));
-        Status = PostStatus.Failed;
-        LastError = error;
-        RetryCount++;
-        return OperationResult.MakeSuccess();
-    }
-
-    public bool CanRetry => RetryCount < 3;
+        => Status is not PostStatus.Publishing and not PostStatus.Scheduled and not PostStatus.Failed
+            ? OperationResult.MakeFailure(ErrorMessage.Create("Status", $"Cannot mark as failed a slot with status {Status}."))
+            : OperationResult.MakeSuccess().IfSuccess(_ =>
+            {
+                Status = PostStatus.Failed;
+                LastError = error;
+                RetryCount++;
+            });
+    #endregion
 }
