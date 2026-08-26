@@ -145,11 +145,18 @@ public class PostForgeDbContext(DbContextOptions<PostForgeDbContext> options) : 
             entity.Property(e => e.Identity).HasColumnName("Id");
             entity.Property(e => e.TenantId);
             entity.HasIndex(e => e.TenantId);
+            entity.HasIndex(e => new { e.TenantId, e.ProviderKey }).IsUnique();
             entity.Property(e => e.ProviderKey).IsRequired().HasMaxLength(100);
             entity.Property(e => e.Scope).HasConversion(providerCredentialScopeConverter).HasMaxLength(50);
-            entity.Property(e => e.KeyVaultReference).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.DisplayName).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.KeyVaultReference).HasMaxLength(500);
+            entity.Property(e => e.SecretValue).HasMaxLength(2000);
+            entity.Property(e => e.SettingsJson).HasMaxLength(4000);
+            entity.Property(e => e.IsEnabled);
             entity.Property(e => e.IsValidated);
             entity.Property(e => e.CreatedAtUtc);
+            entity.Property(e => e.UpdatedAtUtc);
             entity.HasQueryFilter(c => CurrentTenantId == null || c.TenantId == CurrentTenantId);
         });
 

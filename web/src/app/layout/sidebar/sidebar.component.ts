@@ -53,6 +53,10 @@ import { AuthService } from '../../services/auth.service';
             <mat-icon>auto_awesome</mat-icon>
             <span>AI Assist</span>
           </a>
+          <a class="pf-nav__item" routerLink="/provider-credentials" routerLinkActive="active" (click)="close.emit()">
+            <mat-icon>key</mat-icon>
+            <span>Provider Keys</span>
+          </a>
         </nav>
 
         <div class="pf-sidebar__footer">

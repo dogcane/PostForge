@@ -1,5 +1,6 @@
 using PostForge.Application.Campaigns.DTOs;
 using PostForge.Application.Posts.DTOs;
+using PostForge.Application.ProviderCredentials.DTOs;
 using PostForge.Application.Scheduling.DTOs;
 using PostForge.Application.Tenants.DTOs;
 using PostForge.Domain.Entities;
@@ -55,5 +56,22 @@ public static class DtoMappingExtensions
         Slug = tenant.Slug,
         IsActive = tenant.IsActive,
         CreatedAtUtc = tenant.CreatedAtUtc
+    };
+
+    public static ProviderCredentialDto ToDto(this ProviderCredential credential) => new()
+    {
+        Id = credential.Id,
+        ProviderKey = credential.ProviderKey,
+        Scope = credential.Scope,
+        DisplayName = credential.DisplayName,
+        Description = credential.Description,
+        KeyVaultReference = credential.KeyVaultReference,
+        MaskedSecret = credential.GetMaskedSecret(),
+        HasSecret = !string.IsNullOrWhiteSpace(credential.SecretValue),
+        SettingsJson = credential.SettingsJson,
+        IsEnabled = credential.IsEnabled,
+        IsValidated = credential.IsValidated,
+        CreatedAtUtc = credential.CreatedAtUtc,
+        UpdatedAtUtc = credential.UpdatedAtUtc
     };
 }
