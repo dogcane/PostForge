@@ -3,15 +3,43 @@
   "configurations": [
     {
       "name": "API (PostForge.Api)",
-      "type": "dotnet",
+      "type": "coreclr",
       "request": "launch",
-      "projectPath": "${workspaceFolder}/src/PostForge.Api/PostForge.Api.csproj"
+      "program": "${workspaceFolder}/src/PostForge.Api/bin/Debug/net10.0/PostForge.Api.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/src/PostForge.Api",
+      "stopAtEntry": false,
+      "console": "internalConsole",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
     },
     {
       "name": "Worker (PostForge.Worker)",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/PostForge.Worker/bin/Debug/net10.0/PostForge.Worker.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/src/PostForge.Worker",
+      "stopAtEntry": false,
+      "console": "internalConsole",
+      "env": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    },
+    {
+      "name": "API (PostForge.Api) — build",
       "type": "dotnet",
       "request": "launch",
-      "projectPath": "${workspaceFolder}/src/PostForge.Worker/PostForge.Worker.csproj"
+      "projectPath": "${workspaceFolder}/src/PostForge.Api/PostForge.Api.csproj",
+      "hotReloadEnabled": false
+    },
+    {
+      "name": "Worker (PostForge.Worker) — build",
+      "type": "dotnet",
+      "request": "launch",
+      "projectPath": "${workspaceFolder}/src/PostForge.Worker/PostForge.Worker.csproj",
+      "hotReloadEnabled": false
     },
     {
       "name": "ng serve (web)",
@@ -42,7 +70,9 @@
         "API (PostForge.Api)",
         "Worker (PostForge.Worker)",
         "ng serve (web)"
-      ]
+      ],
+      "preLaunchTask": "dotnet: build (PostForge.slnx)",
+      "stopAll": true
     }
   ]
 }

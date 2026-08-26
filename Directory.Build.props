@@ -1,0 +1,14 @@
+<Project>
+  <!-- Windows file-lock resilience for multi-process debugging (Api + Worker share 10+ libraries).
+       When both hosts run, their bin/PostForge.*.dll are locked; a concurrent build/hot-reload
+       trying to overwrite them fails with MSB3021/MSB3027/CS2012. -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <!-- Retry file copies that hit a lock – Dotnet SDK Copy task respects these -->
+    <CopyRetryCount>10</CopyRetryCount>
+    <CopyRetryDelayMilliseconds>500</CopyRetryDelayMilliseconds>
+    <!-- NOTE: Do NOT set UseSharedCompilation=false here – it 4x slows builds.
+         CS2012 on obj/PostForge.Domain.dll was caused by two concurrent
+         `dotnet build PostForge.slnx` from parallel preLaunchTasks (pre-fix).
+         Fixed by using coreclr (no implicit build) + single compound preLaunchTask. -->
+  </PropertyGroup>
+</Project>

@@ -2,6 +2,23 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "dotnet: build (PostForge.slnx)",
+      "type": "shell",
+      "command": "dotnet build PostForge.slnx -c Debug",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": "$msCompile",
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
       "label": "dotnet: watch API",
       "type": "shell",
       "command": "dotnet watch run",
