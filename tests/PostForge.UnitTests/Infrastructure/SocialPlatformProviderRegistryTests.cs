@@ -14,12 +14,21 @@ public class SocialPlatformProviderRegistryTests
     private static FacebookProvider CreateFacebookProvider()
         => new(new HttpClient(), Options.Create(new FacebookProviderOptions()));
 
+    private static InstagramProvider CreateInstagramProvider()
+        => new(new HttpClient(), Options.Create(new InstagramProviderOptions { DefaultInstagramUserId = "17841412345678901" }));
+
+    private static TikTokProvider CreateTikTokProvider()
+        => new(new HttpClient(), Options.Create(new TikTokProviderOptions()));
+
+    private static YouTubeProvider CreateYouTubeProvider()
+        => new(new HttpClient(), Options.Create(new YouTubeProviderOptions()));
+
     private readonly ISocialPlatformProvider[] _providers =
     [
         CreateFacebookProvider(),
-        new InstagramProvider(),
-        new TikTokProvider(),
-        new YouTubeProvider(),
+        CreateInstagramProvider(),
+        CreateTikTokProvider(),
+        CreateYouTubeProvider(),
     ];
 
     private readonly SocialPlatformProviderRegistry _sut;

@@ -24,9 +24,9 @@ public static class DependencyInjection
         services.AddScoped<ITenantContext, SystemTenantContext>();
 
         services.AddFacebookProvider(configuration);
-        services.AddInstagramProvider();
-        services.AddTikTokProvider();
-        services.AddYouTubeProvider();
+        services.AddInstagramProvider(configuration);
+        services.AddTikTokProvider(configuration);
+        services.AddYouTubeProvider(configuration);
 
         services.AddProviderRegistries();
         services.AddServiceBusPublishJobSender(configuration);

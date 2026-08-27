@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using PostForge.Domain.Entities;
 using PostForge.Domain.Interfaces;
@@ -12,7 +13,10 @@ public sealed class TenantResolutionMiddleware(RequestDelegate next)
     {
         if (context.User.Identity?.IsAuthenticated == true)
         {
-            var userIdClaim = context.User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+            // JwtSecurityTokenHandler maps "sub" -> ClaimTypes.NameIdentifier by default (MapInboundClaims=true).
+            // Check both the JWT name and the mapped claim to avoid null UserId.
+            var userIdClaim = context.User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+                ?? context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (Guid.TryParse(userIdClaim, out var userId))
             {
                 tenantContext.UserId = userId;

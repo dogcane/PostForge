@@ -36,9 +36,9 @@ public static class DependencyInjection
     private static void RegisterSocialProviders(IServiceCollection services, IConfiguration configuration)
     {
         services.AddFacebookProvider(configuration);
-        services.AddInstagramProvider();
-        services.AddTikTokProvider();
-        services.AddYouTubeProvider();
+        services.AddInstagramProvider(configuration);
+        services.AddTikTokProvider(configuration);
+        services.AddYouTubeProvider(configuration);
     }
 
     private static void RegisterAiProviders(IServiceCollection services)

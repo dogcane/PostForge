@@ -3,6 +3,7 @@ using Microsoft.OpenApi;
 using PostForge.Api;
 using PostForge.Api.Middleware;
 using PostForge.Application;
+using PostForge.Infrastructure.DAL;
 using PostForge.Infrastructure.Identity;
 using Scalar.AspNetCore;
 
@@ -64,6 +65,10 @@ builder.Services.AddTransient<GlobalExceptionHandler>();
 
 var app = builder.Build();
 
+// Ensure business DB (Posts, ScheduleSlots, etc.) exists BEFORE identity seeding.
+// PostForgeDbContext was never ensured at startup -> fresh DB had no ScheduleSlots table (42P01).
+// Uses Migrate if migrations exist, otherwise EnsureCreated; in Development auto-recreates stale DB.
+await app.Services.EnsurePostForgeDatabaseAsync();
 await app.Services.EnsureIdentityDatabaseAndSuperUserAsync(builder.Configuration);
 
 app.UseCors("AllowAll");
@@ -82,7 +87,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseMiddleware<GlobalExceptionHandler>();
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseAuthentication();
 app.UseMiddleware<TenantResolutionMiddleware>();

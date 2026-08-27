@@ -1,5 +1,6 @@
 using Mediator;
 using PostForge.Application;
+using PostForge.Infrastructure.DAL;
 using PostForge.Worker;
 using PostForge.Worker.Jobs;
 using PostForge.Worker.Services;
@@ -40,4 +41,8 @@ builder.ConfigureLogging(logging =>
 });
 
 var host = builder.Build();
+
+// Ensure business DB exists (same logic as Api). In Development auto-recreates stale DB.
+await host.Services.EnsurePostForgeDatabaseAsync();
+
 await host.RunAsync();

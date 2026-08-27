@@ -37,25 +37,28 @@ import { ApiService } from '../../../services/api.service';
 
         <mat-form-field appearance="outline" *ngIf="!isEditing">
           <mat-label>Provider Key</mat-label>
-          <mat-select [(ngModel)]="providerKey" name="providerKey" (selectionChange)="onProviderChange()">
+          <mat-select [(ngModel)]="providerKey" name="providerKey" (selectionChange)="onProviderChange()" required>
             <mat-option *ngFor="let p of supported" [value]="p.key">{{ p.label }} ({{ p.key }})</mat-option>
           </mat-select>
-          <mat-hint>Or type custom key below</mat-hint>
+          <mat-hint *ngIf="supported.length === 0">No installed providers found</mat-hint>
+          <mat-hint *ngIf="supported.length > 0">Only installed providers are selectable</mat-hint>
         </mat-form-field>
 
-        <mat-form-field appearance="outline" *ngIf="!isEditing">
-          <mat-label>Provider Key (custom)</mat-label>
-          <input matInput [(ngModel)]="providerKey" name="customKey" placeholder="FACEBOOK, openai, dalle ..." />
+        <mat-form-field appearance="outline" *ngIf="isEditing">
+          <mat-label>Provider Key</mat-label>
+          <input matInput [value]="providerKey" disabled />
+          <mat-hint>Provider key type cannot be changed</mat-hint>
         </mat-form-field>
 
         <div class="pf-form-row">
           <mat-form-field appearance="outline">
             <mat-label>Scope</mat-label>
-            <mat-select [(ngModel)]="scope" name="scope">
+            <mat-select [(ngModel)]="scope" name="scope" disabled>
               <mat-option [value]="0">Social</mat-option>
               <mat-option [value]="1">AI Text</mat-option>
               <mat-option [value]="2">AI Image</mat-option>
             </mat-select>
+            <mat-hint>Auto-set from provider</mat-hint>
           </mat-form-field>
           <mat-form-field appearance="outline">
             <mat-label>Display Name</mat-label>
@@ -131,7 +134,25 @@ import { ApiService } from '../../../services/api.service';
       </mat-card>
     </div>
   `,
-  styles: [`.pf-section-title{margin:1rem 0 .5rem; font-size:.9rem; color:#374151; font-weight:600;}`]
+  styles: [`
+    :host { display:block; }
+    .pf-form__card {
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+      padding-bottom:16px;
+    }
+    .pf-form__card .mat-mdc-form-field { width:100%; }
+    .pf-form-row { margin-bottom:0; }
+    .pf-section-title{
+      margin:.5rem 0 .25rem;
+      font-size:.85rem;
+      color:var(--pf-text-muted);
+      font-weight:600;
+      letter-spacing:.01em;
+    }
+    .pf-form__card mat-slide-toggle { margin:4px 0 8px; }
+  `]
 })
 export class ProviderFormComponent implements OnInit {
   isEditing = false;
@@ -169,7 +190,21 @@ export class ProviderFormComponent implements OnInit {
 
   ngOnInit(): void {
     this.api.getSupportedProviders().subscribe({
-      next: (list) => this.supported = list,
+      next: (list) => {
+        this.supported = list;
+        if (!this.isEditing) {
+          // Default to first installed provider if current key not in list
+          const exists = list.some(p => p.key.toLowerCase() === this.providerKey.toLowerCase());
+          if (!exists && list.length > 0) {
+            this.providerKey = list[0].key;
+          }
+          this.syncScopeFromSupported();
+          if (!this.displayName) {
+            const selected = list.find(p => p.key.toLowerCase() === this.providerKey.toLowerCase());
+            this.displayName = selected?.label ?? this.providerKey;
+          }
+        }
+      },
       error: () => this.supported = []
     });
 
@@ -189,18 +224,23 @@ export class ProviderFormComponent implements OnInit {
         error: () => this.error = 'Unable to load credential.'
       });
     } else {
-      this.displayName = 'Facebook';
+      // provisional displayName until supported list loads
+      if (!this.displayName) this.displayName = 'Facebook';
+    }
+  }
+
+  private syncScopeFromSupported(): void {
+    const match = this.supported.find(p => p.key.toLowerCase() === this.providerKey.toLowerCase());
+    if (match) {
+      this.scope = match.scope;
     }
   }
 
   onProviderChange(): void {
-    if (this.providerKey.toUpperCase() === 'FACEBOOK') {
-      this.scope = ProviderCredentialScope.Social;
-      if (!this.displayName || this.displayName === 'Facebook') this.displayName = 'Facebook';
-    } else if (['openai','anthropic','google-gemini','microsoft-foundry'].includes(this.providerKey)) {
-      this.scope = ProviderCredentialScope.AiText;
-    } else if (['dalle','stable-diffusion'].includes(this.providerKey)) {
-      this.scope = ProviderCredentialScope.AiImage;
+    this.syncScopeFromSupported();
+    // Keep Facebook displayName convenience
+    if (this.providerKey.toUpperCase() === 'FACEBOOK' && (!this.displayName || this.displayName === 'Facebook')) {
+      this.displayName = 'Facebook';
     }
     this.tryParseFacebookSettings();
   }

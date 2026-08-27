@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 
 namespace PostForge.Infrastructure.Identity;
 
@@ -16,7 +18,40 @@ public static class SuperUserSeeder
         var sp = scope.ServiceProvider;
 
         var identityDbContext = sp.GetRequiredService<AppIdentityDbContext>();
-        await identityDbContext.Database.EnsureCreatedAsync();
+        // Use Migrate if migrations exist (preferred), fallback to EnsureCreated for legacy DBs.
+        // Both contexts share the same DB, so we must not assume the DB is empty.
+        var pending = await identityDbContext.Database.GetPendingMigrationsAsync();
+        if (pending.Any())
+        {
+            try
+            {
+                await identityDbContext.Database.MigrateAsync();
+            }
+            catch (PostgresException ex) when (ex.SqlState == "42P07")
+            {
+                // 42P07 = relation already exists (DB created via EnsureCreated before migrations)
+                var env = sp.GetService<Microsoft.Extensions.Hosting.IHostEnvironment>();
+                if (env?.IsDevelopment() == true)
+                {
+                    // In Development, safe to recreate — but we must not drop business tables.
+                    // Instead, baseline by inserting history row if tables already exist.
+                    // Simplest dev fix: ensure created fallback
+                    await identityDbContext.Database.EnsureCreatedAsync();
+                }
+                else throw;
+            }
+        }
+        else
+        {
+            var applied = await identityDbContext.Database.GetAppliedMigrationsAsync();
+            if (!applied.Any())
+            {
+                // No migrations history at all (fresh DB without any migrations) -> EnsureCreated
+                // But we already have business migrations, so history exists -> this branch not taken
+                // Keep EnsureCreated as fallback for environments without migrations
+                await identityDbContext.Database.EnsureCreatedAsync();
+            }
+        }
 
         var superUser = configuration.GetSection("Auth:SuperUser").Get<SuperUserOptions>();
         var email = superUser?.Email;

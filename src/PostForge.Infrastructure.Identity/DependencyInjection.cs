@@ -23,9 +23,18 @@ public static class DependencyInjection
 
         var authOptions = configuration.GetSection("Auth").Get<AuthOptions>() ?? new AuthOptions();
 
-        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
             .AddJwtBearer(options =>
             {
+                // Keep JWT claim types as-is ("sub", "isSuperUser") instead of mapping to Microsoft claim types.
+                // Prevents TenantResolutionMiddleware having to handle both "sub" and NamesIdentifier.
+                options.MapInboundClaims = false;
+
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,

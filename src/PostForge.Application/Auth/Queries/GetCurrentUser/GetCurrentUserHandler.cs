@@ -28,7 +28,7 @@ public class GetCurrentUserHandler(
             .ToListAsync(cancellationToken);
 
         var tenants = await ((IQueryable<PostForge.Domain.Entities.Tenant>)tenantRepository)
-            .Where(t => tenantIds.Contains(t.Id))
+            .Where(t => tenantIds.Contains(t.Identity))
             .ToListAsync(cancellationToken);
 
         return new CurrentUserDto

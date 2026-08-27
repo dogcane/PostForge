@@ -8,6 +8,7 @@ using PostForge.Application.ProviderCredentials.Commands.ValidateProviderCredent
 using PostForge.Application.ProviderCredentials.DTOs;
 using PostForge.Application.ProviderCredentials.Queries.GetAllProviderCredentials;
 using PostForge.Application.ProviderCredentials.Queries.GetProviderCredentialById;
+using PostForge.Domain.Providers;
 using PostForge.Domain.ValueObjects;
 
 namespace PostForge.Api.Controllers;
@@ -15,7 +16,11 @@ namespace PostForge.Api.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/v1/provider-credentials")]
-public class ProviderCredentialsController(IMediator mediator) : ControllerBase
+public class ProviderCredentialsController(
+    IMediator mediator,
+    ISocialPlatformProviderRegistry socialRegistry,
+    IProviderRegistry<IAiTextProvider> aiTextRegistry,
+    IProviderRegistry<IAiImageProvider> aiImageRegistry) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<List<ProviderCredentialDto>>> GetAll()
@@ -78,22 +83,50 @@ public class ProviderCredentialsController(IMediator mediator) : ControllerBase
         return NoContent();
     }
 
+    private static readonly Dictionary<string, (string Label, string Description, ProviderCredentialScope Scope)> KnownProviders = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["FACEBOOK"] = ("Facebook", "Meta Graph API - AppId / AppSecret / RedirectUri / PageId", ProviderCredentialScope.Social),
+        ["INSTAGRAM"] = ("Instagram", "Instagram Graph API via Facebook", ProviderCredentialScope.Social),
+        ["TIKTOK"] = ("TikTok", "TikTok Content Posting API", ProviderCredentialScope.Social),
+        ["YOUTUBE"] = ("YouTube", "YouTube Data API v3", ProviderCredentialScope.Social),
+        ["openai"] = ("OpenAI", "OpenAI text generation", ProviderCredentialScope.AiText),
+        ["anthropic"] = ("Anthropic", "Anthropic Claude API", ProviderCredentialScope.AiText),
+        ["google-gemini"] = ("Google Gemini", "Google Gemini API", ProviderCredentialScope.AiText),
+        ["microsoft-foundry"] = ("Microsoft Foundry", "Azure OpenAI / Foundry", ProviderCredentialScope.AiText),
+        ["dalle"] = ("DALL·E", "OpenAI DALL-E image generation", ProviderCredentialScope.AiImage),
+        ["stable-diffusion"] = ("Stable Diffusion", "Stability AI", ProviderCredentialScope.AiImage),
+        ["FAKE"] = ("Fake", "Fake provider for testing", ProviderCredentialScope.Social)
+    };
+
     [HttpGet("supported")]
     public ActionResult<object> GetSupportedProviders()
     {
-        var providers = new[]
-        {
-            new { key = "FACEBOOK", scope = ProviderCredentialScope.Social, label = "Facebook", description = "Meta Graph API - AppId / AppSecret / RedirectUri / PageId" },
-            new { key = "INSTAGRAM", scope = ProviderCredentialScope.Social, label = "Instagram", description = "Instagram Graph API via Facebook" },
-            new { key = "TIKTOK", scope = ProviderCredentialScope.Social, label = "TikTok", description = "TikTok Content Posting API" },
-            new { key = "YOUTUBE", scope = ProviderCredentialScope.Social, label = "YouTube", description = "YouTube Data API v3" },
-            new { key = "openai", scope = ProviderCredentialScope.AiText, label = "OpenAI", description = "OpenAI text generation" },
-            new { key = "anthropic", scope = ProviderCredentialScope.AiText, label = "Anthropic", description = "Anthropic Claude API" },
-            new { key = "google-gemini", scope = ProviderCredentialScope.AiText, label = "Google Gemini", description = "Google Gemini API" },
-            new { key = "microsoft-foundry", scope = ProviderCredentialScope.AiText, label = "Microsoft Foundry", description = "Azure OpenAI / Foundry" },
-            new { key = "dalle", scope = ProviderCredentialScope.AiImage, label = "DALL·E", description = "OpenAI DALL-E image generation" },
-            new { key = "stable-diffusion", scope = ProviderCredentialScope.AiImage, label = "Stable Diffusion", description = "Stability AI" }
-        };
+        var installedKeys = socialRegistry.AvailableProviderKeys
+            .Concat(aiTextRegistry.AvailableProviderKeys)
+            .Concat(aiImageRegistry.AvailableProviderKeys)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        // Preserve KnownProviders insertion order, filter to installed only
+        var knownInstalled = KnownProviders
+            .Where(kv => installedKeys.Contains(kv.Key))
+            .Select(kv => new { key = kv.Key, scope = kv.Value.Scope, label = kv.Value.Label, description = kv.Value.Description });
+
+        // Fallback for any installed provider not in KnownProviders (e.g., future plugins)
+        var unknownInstalled = installedKeys
+            .Where(k => !KnownProviders.ContainsKey(k))
+            .Select(key =>
+            {
+                var scope = socialRegistry.AvailableProviderKeys.Contains(key, StringComparer.OrdinalIgnoreCase)
+                    ? ProviderCredentialScope.Social
+                    : aiTextRegistry.AvailableProviderKeys.Contains(key, StringComparer.OrdinalIgnoreCase)
+                        ? ProviderCredentialScope.AiText
+                        : ProviderCredentialScope.AiImage;
+                return new { key, scope, label = key, description = $"Provider {key}" };
+            });
+
+        var providers = knownInstalled.Concat(unknownInstalled).ToArray();
+
         return Ok(providers);
     }
 }

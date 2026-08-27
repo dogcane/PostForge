@@ -481,5 +481,9 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 
+# Local development overrides — keep personal DB/auth settings untracked
+src/PostForge.Api/appsettings.Development.json
+src/PostForge.Worker/appsettings.Development.json
+
 # Temp / experiments
 tempcheck/

@@ -90,6 +90,29 @@ infra/
 - Token OAuth e chiavi AI mai in chiaro → Key Vault + Managed Identity.
 - Provider esterni mockabili nei test (WireMock.NET).
 
+## Persistenza e Migrations (EF Core)
+
+**Regola obbligatoria: ogni modifica al DB richiede una migration. Mai usare `EnsureCreated` per evolvere lo schema in produzione/dev persistente.**
+
+- Due `DbContext` sullo stesso database (`PostForgeDb`): `PostForgeDbContext` (DAL — `Posts`, `Campaigns`, `ScheduleSlots`, `MediaAssets`, `PostTags`, `SocialAccounts`, `ProviderCredentials`, `Tenants`, `TenantMemberships`) e `AppIdentityDbContext` (Identity — `AspNet*`, `RefreshTokens`). Condividono la stessa `__EFMigrationsHistory`; gli `Id` migration non collidono (timestamp diversi).
+- Flusso per **qualsiasi** modifica a entità / `OnModelCreating` / `ValueConverter` / `OwnsMany`:
+  1. Modifica entity + `PostForgeDbContext.cs:21` / `AppIdentityDbContext.cs:12`.
+  2. Genera migration con `dotnet ef` (richiede `Microsoft.EntityFrameworkCore.Design` + `DesignTime*Factory`):
+     ```powershell
+     # Business — PostForgeDbContext
+     dotnet ef migrations add <NomeDescrittivo> --context PostForgeDbContext --project src/PostForge.Infrastructure.DAL --startup-project src/PostForge.Api --output-dir Migrations/PostForgeDb
+     # Identity — AppIdentityDbContext (solo se tocchi AspNet*/RefreshTokens)
+     dotnet ef migrations add <NomeDescrittivo> --context AppIdentityDbContext --project src/PostForge.Infrastructure.Identity --startup-project src/PostForge.Api --output-dir Migrations/AppIdentityDb
+     ```
+     Le factory design-time (`PostForge.Infrastructure.DAL/DesignTimePostForgeDbContextFactory.cs:1`, `PostForge.Infrastructure.Identity/DesignTimeAppIdentityDbContextFactory.cs:1`) leggono `ConnectionStrings:PostForgeDb` da `src/PostForge.Api/appsettings*.json` con fallback `Host=localhost/...`.
+  3. Verifica `dotnet build` e, se hai un DB locale, `dotnet ef database update --context PostForgeDbContext` / `--context AppIdentityDbContext` con `--connection "Host=...;Database=PostForgeDb_Dev;..."` (dev usa `Host=172.24.224.193` via podman `post-postgres` su `0.0.0.0:5432`).
+  4. Committa la cartella `Migrations/` generata.
+- Startup applica le pending in modo idempotente:
+  - `PostForge.Infrastructure.DAL/DependencyInjection.cs:77` `EnsurePostForgeDatabaseAsync()` → `await context.Database.MigrateAsync()` (unico punto di creazione/evoluzione per `PostForgeDbContext`).
+  - `PostForge.Infrastructure.Identity/SuperUserSeeder.cs:19` analogo per `AppIdentityDbContext` + seeding superuser.
+  - Chiamati in `PostForge.Api/Program.cs:70` e `PostForge.Worker/Program.cs:14` **prima** di qualsiasi query. Nessun check `42P01`/`42P07` su `ScheduleSlots` o altre tabelle — lo schema evolve solo via migration.
+- **Vietato:** `EnsureCreated`/`EnsureDeleted` come meccanismo di migrazione, `ExecuteSqlRaw("SELECT 1 FROM \"ScheduleSlots\"")` o catch su `PostgresException` per dedurre schema. `EnsureCreated` è solo per test in-memory/Testcontainers (`PostForge.IntegrationTests/Infrastructure/DbContextTests.cs:33`, `PostForge.IntegrationTests/Api/PostForgeWebApplicationFactory.cs:54`); mai in `Api`/`Worker` su DB persistente. Se un DB locale è stale (creato prima delle migrations), resettarlo con `DROP DATABASE ... WITH (FORCE); CREATE DATABASE ...` e poi `MigrateAsync`, non con logica `if (IsDevelopment) EnsureDeleted`.
+
 ## Convenzioni C# (.NET 10 / C# 14)
 
 Target `net10.0` → C# 14 di default (niente `<LangVersion>` esplicito). Usare attivamente le feature moderne, niente codice "legacy" se esiste l'equivalente nuovo:
